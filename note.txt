@@ -1,0 +1,30 @@
+1. Pyannote.audio works but pretrained models are shit, gated with complicate, multi step verification for purposes.
+2. speechbrain model params set need to first download, consume diskspace (in Windows)
+3. VAD need for segmentation - detect silence, the speech timestamps
+4. Embeddings to extract speaker characteristics, use vectorize, etc to compare and cluster to detect each individual speaker.
+5. Performance on VAD should be timestamps matching, silence and voice. 
+    Some data (diarizers-community) ground-truth contain the more specific timestamps for each speech, handled overlap speech.
+
+asr first the diarize later better
+
+
+Phase2:
+Transcript: metadata / non-meta
+-> chunking (theo metadata/ size)
+-> llm -> Entity extraction / behaviour extraction/ graph+... (hao tokens cực kỳ)
+->knowledge graph
+Entity: Speaker/Event/Object -Relationship (Has/ made/...) -> Entity.
+Speech1: A
+Speech2: B
+Speech3: A -> a-speech->b
+
+Cheaper:
+-> Chunking 
+-> llm -> graph : Chunk -> chunk edge: Number/weight -> Duyệt thông tin, theo các node của graph.
+
+RAG (Graph-based RAG).
+
+Retrieval: Hybrid: LLM/Vector Embeddings Textt + Keyword Search.
+Context Engineering. (thử).
+Information: Transcript -> Graph / Data Structure (Vector DB)
+Retrieval+Summarization: LLM + Query.
