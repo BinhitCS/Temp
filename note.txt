@@ -28,3 +28,14 @@ Retrieval: Hybrid: LLM/Vector Embeddings Textt + Keyword Search.
 Context Engineering. (thử).
 Information: Transcript -> Graph / Data Structure (Vector DB)
 Retrieval+Summarization: LLM + Query.
+
+ASR for minor resource language like Vietnamese: Awful Even with the decoder specification
+Awful:
+    - Repetition tokens: Lack of candidates
+    - Bias: Reuse many part of the training, tuning data to the transcript.
+    - Wrong recognition for word: Transform to other language/ wrong spellings.
+Solutions: 
+    - Bigger model (longer transcribe time, hardware need)
+    - Finetuned (No label data, Minor Vocabulary and Phoentics/Tu vung va Ngu dieu)
+
+ASR cause mistake when the volumn is low or accent isnt standard, cause really mix language/miss translate to right language.

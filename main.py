@@ -8,6 +8,9 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import silhouette_score, davies_bouldin_score
 import whisper
 from whisper.model import Whisper
+import warnings
+warnings.filterwarnings("ignore", module="whisper.timing")
+
 
 import soundfile as sf
 from silero_vad import (
@@ -135,7 +138,9 @@ def eval_detection(detected, ground_truth):
     return recall, fa_rate
 
 
-def extract_embeddings_from_segments(waveform, classifier, speech_timestamps) -> torch.Tensor:
+def extract_embeddings_from_segments(
+    waveform, classifier, speech_timestamps,
+) -> torch.Tensor:
     embeddings = []
     for ts in speech_timestamps:
         start, end = ts["start"], ts["end"]  # in samples
@@ -149,7 +154,9 @@ def extract_embeddings_from_segments(waveform, classifier, speech_timestamps) ->
     return torch.cat(embeddings, dim=0)
 
 
-asr_model: Whisper = whisper.load_model("small", device="cuda")  # or "medium", "large-v2"
+asr_model: Whisper = whisper.load_model(
+    "small", device="cuda"
+)  # or "medium", "large-v2"
 
 
 def agglomerative_k_search(
@@ -162,7 +169,7 @@ def agglomerative_k_search(
     """
     Cluster embeddings with Agglomerative (dendrogram once, cut by k).
     Picks best k in [min_clusters, max_clusters] using silhouette score.
-    
+
     Returns:
         best_labels: np.ndarray of shape (N,)
         best_k: int, chosen number of clusters
@@ -222,7 +229,7 @@ def group_segments(segments, labels, max_gap=0.8, max_len=30.0, sr=16000):
     cur_start, cur_end = None, None
     cur_label = None
 
-    for (seg, label) in zip(segments, labels):
+    for seg, label in zip(segments, labels):
         start, end = seg["start"] / sr, seg["end"] / sr
 
         if cur_label is None:
@@ -230,7 +237,11 @@ def group_segments(segments, labels, max_gap=0.8, max_len=30.0, sr=16000):
             cur_start, cur_end, cur_label = start, end, label
             continue
 
-        if label == cur_label and (start - cur_end) <= max_gap and (end - cur_start) <= max_len:
+        if (
+            label == cur_label
+            and (start - cur_end) <= max_gap
+            and (end - cur_start) <= max_len
+        ):
             # extend current group
             cur_end = end
         else:
@@ -243,7 +254,7 @@ def group_segments(segments, labels, max_gap=0.8, max_len=30.0, sr=16000):
     return grouped
 
 
-def transcribe_chunks(waveform, sr, chunks, asr_model):
+def transcribe_chunks(waveform, sr, chunks, asr_model: Whisper):
     """
     Run Whisper ASR on pre-chunked waveform segments.
     - waveform: torch.Tensor [1, num_samples]
@@ -256,7 +267,7 @@ def transcribe_chunks(waveform, sr, chunks, asr_model):
 
     for i, c in enumerate(chunks):
         # Slice chunk by samples
-        segment = waveform[:, c["start"]:c["end"]].cpu().numpy()
+        segment = waveform[:, c["start"] : c["end"]].cpu().numpy()
         segment = segment.squeeze().astype("float32")
 
         # Normalize if needed
@@ -266,27 +277,34 @@ def transcribe_chunks(waveform, sr, chunks, asr_model):
         # Run Whisper with timestamps
         result = asr_model.transcribe(
             segment,
-            fp16=False,
-            word_timestamps=True
+            fp16=False,  # safer on CPU/small GPU
+            word_timestamps=True,  # return per-word timestamps
+            beam_size=7,  # beam search for stability
+            temperature=(0, 0.1, 0.2, 0.4, 0.8),  # deterministic output
+            compression_ratio_threshold=1.8,
         )
 
         # Convert Whisper word timestamps (sec) → samples
         words = []
         for w in result.get("segments", []):
             for item in w["words"]:
-                words.append({
-                    "word": item["word"],
-                    "start": c["start"] + int(item["start"] * sr),
-                    "end":   c["start"] + int(item["end"] * sr),
-                })
+                words.append(
+                    {
+                        "word": item["word"],
+                        "start": c["start"] + int(item["start"] * sr),
+                        "end": c["start"] + int(item["end"] * sr),
+                    }
+                )
 
-        transcripts.append({
-            "chunk_id": i,
-            "start": c["start"],  # in samples
-            "end": c["end"],      # in samples
-            "text": result["text"].strip(),
-            "words": words
-        })
+        transcripts.append(
+            {
+                "chunk_id": i,
+                "start": c["start"],  # in samples
+                "end": c["end"],  # in samples
+                "text": result["text"].strip(),
+                "words": words,
+            }
+        )
 
         # Optional debug log in seconds
         # print(f"[Chunk {i}] {c['start']/sr:.2f}-{c['end']/sr:.2f}s: {result['text'].strip()}")
@@ -324,7 +342,9 @@ def chunk_by_silence_and_overlap(
         gap = start - cur_end
 
         if gap >= min_silence_samples:
-            chunks.append({"start": cur_start, "end": cur_end, "segments": cur_segments})
+            chunks.append(
+                {"start": cur_start, "end": cur_end, "segments": cur_segments}
+            )
             cur_start, cur_end = start, end
             cur_segments = [(start, end)]
         else:
@@ -344,7 +364,9 @@ def chunk_by_silence_and_overlap(
             start = c["start"]
             while start < c["end"]:
                 end = min(start + max_chunk_samples, c["end"])
-                final_chunks.append({"start": start, "end": end, "segments": c["segments"]})
+                final_chunks.append(
+                    {"start": start, "end": end, "segments": c["segments"]}
+                )
                 if end == c["end"]:
                     break
                 start = end - overlap_samples  # slide with overlap
@@ -366,14 +388,16 @@ def assign_speakers(transcripts, diar_segments, sr, snap_gap_sec=1):
         w_mid = (w["start"] + w["end"]) // 2
 
         # find diar segment covering this word
-        candidates = [seg for seg in diar_segments if seg["start"] <= w_mid <= seg["end"]]
+        candidates = [
+            seg for seg in diar_segments if seg["start"] <= w_mid <= seg["end"]
+        ]
         if candidates:
             speaker = candidates[0]["speaker"]
         else:
             # nearest diar segment
             nearest = min(
                 diar_segments,
-                key=lambda s: min(abs(w_mid - s["start"]), abs(w_mid - s["end"]))
+                key=lambda s: min(abs(w_mid - s["start"]), abs(w_mid - s["end"])),
             )
             gap = min(abs(w_mid - nearest["start"]), abs(w_mid - nearest["end"]))
             speaker = nearest["speaker"] if gap <= snap_gap_samples else None
@@ -381,26 +405,39 @@ def assign_speakers(transcripts, diar_segments, sr, snap_gap_sec=1):
         # group by speaker
         if speaker != cur_speaker:
             if cur_words:
-                results.append({
-                    "speaker": f"Speaker {cur_speaker}" if isinstance(cur_speaker, (int, np.integer)) else (cur_speaker or "Unknown"),
-                    "start": min(wd["start"] for wd in cur_words),
-                    "end": max(wd["end"] for wd in cur_words),
-                    "text": " ".join(wd["word"] for wd in cur_words)
-                })
+                results.append(
+                    {
+                        "speaker": (
+                            f"Speaker {cur_speaker}"
+                            if isinstance(cur_speaker, (int, np.integer))
+                            else (cur_speaker or "Unknown")
+                        ),
+                        "start": min(wd["start"] for wd in cur_words),
+                        "end": max(wd["end"] for wd in cur_words),
+                        "text": " ".join(wd["word"] for wd in cur_words),
+                    }
+                )
             cur_speaker, cur_words = speaker, [w]
         else:
             cur_words.append(w)
 
     # flush last
     if cur_words:
-        results.append({
-            "speaker": f"Speaker {cur_speaker}" if isinstance(cur_speaker, (int, np.integer)) else (cur_speaker or "Unknown"),
-            "start": min(wd["start"] for wd in cur_words),
-            "end": max(wd["end"] for wd in cur_words),
-            "text": " ".join(wd["word"] for wd in cur_words)
-        })
+        results.append(
+            {
+                "speaker": (
+                    f"Speaker {cur_speaker}"
+                    if isinstance(cur_speaker, (int, np.integer))
+                    else (cur_speaker or "Unknown")
+                ),
+                "start": min(wd["start"] for wd in cur_words),
+                "end": max(wd["end"] for wd in cur_words),
+                "text": " ".join(wd["word"] for wd in cur_words),
+            }
+        )
 
     return results
+
 
 
 if __name__ == "__main__":
@@ -421,7 +458,7 @@ if __name__ == "__main__":
     else:
         print(f"{DATASET_DIR} exists, skipping download.")
 
-    sample_id = "sample_tv"
+    sample_id = "sample_2"
 
     # --- Load audio ---
     audio_path = os.path.join(DATASET_DIR, sample_id, "audio.wav")
@@ -453,43 +490,42 @@ if __name__ == "__main__":
         linkage_method="average",
         metric="cosine",
         min_clusters=2,
-        max_clusters=15
+        max_clusters=20,
     )
 
     print("Best threshold:", thr)
     print("Best silhouette score:", score)
-    print("Labels:", speaker_labels[:20])
-
+    # print("Labels:", speaker_labels[:20])
 
     # --- Attach labels to speech segments ---
     labeled_segments = [
         {
             "speaker": f"Speaker {label}",
             "start": seg["start"],  # in samples
-            "end": seg["end"],      # in samples
+            "end": seg["end"],  # in samples
         }
         for seg, label in zip(speech_segments, speaker_labels)
     ]
 
-    # # --- Ground-truth for evaluation ---
-    # meta_path = os.path.join(DATASET_DIR, sample_id, "meta.json")
-    # with open(meta_path, "r", encoding="utf-8") as fh:
-    #     meta = json.load(fh)
+    # --- Ground-truth for evaluation ---
+    meta_path = os.path.join(DATASET_DIR, sample_id, "meta.json")
+    with open(meta_path, "r", encoding="utf-8") as fh:
+        meta = json.load(fh)
 
-    # gt_segments = clean_segments(
-    #     meta["timestamps_start"], meta["timestamps_end"], min_dur=1e-4
-    # )
+    gt_segments = clean_segments(
+        meta["timestamps_start"], meta["timestamps_end"], min_dur=1e-3
+    )
+    n_speaker_gt = len(set(meta["speakers"]))
+    # Convert detected segments to seconds for scoring
+    detected_sec = [(s["start"] / sample_rate, s["end"] / sample_rate)
+                    for s in speech_segments]
 
-    # # Convert detected segments to seconds for scoring
-    # detected_sec = [(s["start"] / sample_rate, s["end"] / sample_rate)
-    #                 for s in speech_segments]
+    recall, false_alarm = eval_detection(detected_sec, gt_segments)
+    print(f"Recall={recall:.4f}, FA={false_alarm:.4f}")
+    print(f"Found {len(set(speaker_labels))} speakers, GT got {n_speaker_gt} speakers")
 
-    # recall, false_alarm = eval_detection(detected_sec, gt_segments)
-    # print(f"Recall={recall:.3f}, FA={false_alarm:.3f}")
-    # print(f"Found {len(set(speaker_labels))} speakers")
-
-    chunks = chunk_by_silence_and_overlap(speech_segments, sample_rate)
+    chunks = chunk_by_silence_and_overlap(speech_segments, sample_rate, max_chunk=30, overlap=3)
     transcript = transcribe_chunks(waveform, sample_rate, chunks, asr_model)
     final_result = assign_speakers(transcript, labeled_segments, sample_rate)
-    print(final_result)
+    print(final_result, sep="\n")
     print("Done.")
