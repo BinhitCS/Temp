@@ -1,0 +1,10 @@
+datasets
+torchaudio
+torch
+scikit-learn
+scipy
+openai-whisper
+soundfile
+silero-vad
+speechbrain
+numpy

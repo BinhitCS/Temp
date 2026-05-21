@@ -1,0 +1,39 @@
+Đoạn code này chính là "bước đóng gói và giao hàng" cuối cùng trong quy trình xây dựng Vector Database của bạn. Nó lấy những dữ liệu đã được xử lý ở các bước trước và chính thức lưu (nhồi) chúng vào Qdrant.
+
+Để dễ hình dung, bạn có thể coi Qdrant như một cái kho xưởng, còn đoạn code này là quy trình của bộ phận vận chuyển. Cụ thể nó làm 2 việc:
+
+1. Đóng gói dữ liệu (PointStruct)
+Python
+points = [
+    PointStruct(id=ids[i], vector=embeddings[i].tolist(), payload=payloads[i]) 
+    for i in range(len(ids))
+]
+Trong Qdrant, mỗi một đơn vị dữ liệu được gọi là một Point (Điểm). Dòng code này dùng vòng lặp để tạo ra hàng loạt các gói hàng PointStruct. Mỗi gói hàng bao gồm 3 thành phần bắt buộc:
+
+id (Mã vận đơn): Số thứ tự định danh duy nhất cho điểm dữ liệu này.
+
+vector (Lõi hàng hóa): Một mảng các con số do model AI tạo ra (embeddings). Lưu ý hàm .tolist() rất quan trọng: Model AI thường trả về dữ liệu dưới dạng mảng (array) của thư viện Numpy, nhưng Qdrant chỉ hiểu danh sách (list) nguyên thủy của Python, nên phải có bước chuyển đổi này.
+
+payload (Tem nhãn đính kèm): Các thông tin phụ trợ (metadata) như text_original, speaker, doc_id.
+
+=> Kết thúc bước này, bạn có một danh sách (points) chứa hàng ngàn gói hàng đã được dán nhãn đầy đủ, sẵn sàng nhập kho.
+
+2. Vận chuyển theo mẻ (Batch Upsert)
+Python
+batch_size = 100
+for i in range(0, len(points), batch_size):
+    self.client.upsert(self.collection_name, points[i:i+batch_size])
+Hàm upsert (ghép của Update và Insert) là lệnh yêu cầu Qdrant lưu dữ liệu vào database. Nếu ID đã tồn tại thì nó cập nhật (Update), nếu chưa thì nó chèn mới (Insert).
+
+Tại sao phải có batch_size = 100 mà không tống tất cả vào kho cùng một lúc?
+Giả sử file JSON của bạn có 5000 chunk. Nếu bạn gọi hàm upsert nhét cả 5000 vector (cực kỳ nặng) qua đường truyền mạng hoặc RAM trong một lệnh duy nhất, hệ thống rất dễ bị nghẽn cổ chai, quá tải bộ nhớ (Out of Memory) hoặc rớt kết nối mạng (Timeout).
+
+Do đó, đoạn code dùng vòng lặp for để chia nhỏ danh sách points ra:
+
+Chuyến xe 1: Chở point từ 0 đến 99 nhét vào kho.
+
+Chuyến xe 2: Chở point từ 100 đến 199.
+
+... Cứ thế cho đến khi hết hàng.
+
+Cách viết "chia lô" (batching) này là một tiêu chuẩn bắt buộc (Best Practice) khi làm việc với bất kỳ Database lớn nào, giúp hệ thống RAG của bạn chạy mượt mà, ổn định dù file input có lớn đến đâu chăng nữa.

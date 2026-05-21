@@ -155,7 +155,7 @@ def extract_embeddings_from_segments(
 
 
 asr_model: Whisper = whisper.load_model(
-    "small", device="cuda"
+    "small", device="cpu"
 )  # or "medium", "large-v2"
 
 
@@ -474,7 +474,7 @@ if __name__ == "__main__":
     speaker_encoder = EncoderClassifier.from_hparams(
         source="speechbrain/spkrec-ecapa-voxceleb",
         savedir="./pretrained_models/spkrec-ecapa",
-        run_opts={"device": "cuda"},
+        run_opts={"device": "cpu"},
         local_strategy=LocalStrategy.COPY,
     )
     embeddings = extract_embeddings_from_segments(

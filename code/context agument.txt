@@ -1,0 +1,28 @@
+Cố định cửa sổ ngữ cảnh ở mức [idx - 1, idx + 1] là một cách làm cơ bản tốt để bắt đầu, nhưng nó bộc lộ hai điểm yếu chí mạng khi áp dụng vào thực tế:
+
+ASR cắt câu rất tùy tiện: Khác với văn bản viết tay có dấu chấm/phẩy rõ ràng, file ASR thường ngắt dòng dựa trên... nhịp thở hoặc khoảng lặng của người nói. Một ý tưởng duy nhất có thể bị băm thành 5-6 dòng (utterances) ngắn ngủn. Lấy +/- 1 câu nhiều khi chỉ kéo thêm được hai tiếng "Yeah" hoặc "Okay".
+
+Độ dài câu không đồng đều: Có câu dài 50 từ, có câu chỉ 1 từ. Việc fix cứng số lượng câu sẽ khiến lượng thông tin LLM nhận được lúc thì quá ít (không đủ hiểu), lúc thì quá nhiều (nhiễu).
+
+Để giải quyết triệt để vấn đề này, bạn có thể nâng cấp thuật toán "Context Augmentation" của mình theo một trong 3 chiến lược sau, từ dễ đến khó:
+
++Chiến lược 1: Mở rộng tĩnh có giới hạn (Fixed Expansion)
+	Thay vì +/- 1, bạn nới rộng hẳn ra [idx - 3, idx + 3] hoặc [idx - 5, idx + 5].
+
+	Ưu điểm: Dễ code nhất, chỉ cần sửa vài con số.
+
+	Nhược điểm: Dễ bị "lem" sang chủ đề khác nếu cuộc họp chuyển ý nhanh. Tuy nhiên, LLM hiện tại (như Gemini) đọc hiểu rất thông minh, việc dư một chút ngữ cảnh thường an toàn hơn là thiếu.
+
++Chiến lược 2: Mở rộng theo số lượng từ (Token-based Window) - Khuyên dùng!
+	Thay vì đếm số lượng câu (utterance), chúng ta đếm số lượng từ (words). Thuật toán sẽ mở rộng dần ra xung quanh (câu trước, rồi câu sau) cho đến khi tổng số từ đạt đến một mức lý tưởng (ví dụ: 300 - 400 từ).
+
+	Ưu điểm: Luôn đảm bảo LLM nhận được một lượng thông tin đầy đặn, ổn định, bất kể câu thoại gốc bị cắt vụn hay dài thòng.
+
+	Cách hoạt động: Lấy câu idx làm tâm. Cộng thêm câu idx-1, tính tổng số từ. Nếu chưa đủ, cộng tiếp idx+1, rồi idx-2, idx+2... cho đến khi chạm mốc 400 từ thì dừng.
+
++Chiến lược 3: Mở rộng theo mốc thời gian (Time-based Window)
+	Vì dữ liệu của bạn có timestamp (start), bạn có thể cấu hình lấy ngữ cảnh theo thời gian thực. Ví dụ: "Lấy tất cả các câu thoại diễn ra trong vòng 30 giây trước và 30 giây sau câu tìm được."
+
+	Ưu điểm: Khớp 100% với luồng hội thoại tự nhiên của con người. 1 phút hội thoại thường chứa trọn vẹn 1 ý.
+
+	Nhược điểm: Cần viết logic tính toán trừ thời gian hơi phức tạp một chút.

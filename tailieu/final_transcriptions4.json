@@ -1,0 +1,854 @@
+[
+    {
+        "start": "00:00:08",
+        "end": "00:00:08",
+        "speaker": "Speaker 0",
+        "text": "We'll be right back."
+    },
+    {
+        "start": "00:01:05",
+        "end": "00:01:05",
+        "speaker": "Speaker 3",
+        "text": "Thank you for meeting."
+    },
+    {
+        "start": "00:01:15",
+        "end": "00:01:49",
+        "speaker": "Speaker 0",
+        "text": "design. Technical function design and the working design so that we can move on to the second phase. But first is phase. First announcement, there is a little adaptation in the air-conditioning system, so there"
+    },
+    {
+        "start": "00:01:49",
+        "end": "00:01:51",
+        "speaker": "Speaker 3",
+        "text": "is our ghost"
+    },
+    {
+        "start": "00:01:51",
+        "end": "00:02:03",
+        "speaker": "Speaker 0",
+        "text": "mouse again, but that means that you can have a little trouble with it. C and E, so"
+    },
+    {
+        "start": "00:02:03",
+        "end": "00:02:06",
+        "speaker": "Speaker 2",
+        "text": "it should be over in a couple of days."
+    },
+    {
+        "start": "00:02:06",
+        "end": "00:02:09",
+        "speaker": "Speaker 0",
+        "text": "in a few hours. Then our agenda, first the opening, this time I will take a minute, you're going to have a presentation,"
+    },
+    {
+        "start": "00:02:09",
+        "end": "00:02:24",
+        "speaker": "Speaker 3",
+        "text": "all of you. So"
+    },
+    {
+        "start": "00:02:24",
+        "end": "00:02:27",
+        "speaker": "Speaker 0",
+        "text": "We've got 40 minutes for the whole presentation,"
+    },
+    {
+        "start": "00:02:27",
+        "end": "00:02:30",
+        "speaker": "Speaker 1",
+        "text": "so"
+    },
+    {
+        "start": "00:02:32",
+        "end": "00:02:38",
+        "speaker": "Speaker 0",
+        "text": "I suggest we take about seven minutes per presentation and"
+    },
+    {
+        "start": "00:02:38",
+        "end": "00:02:43",
+        "speaker": "Speaker 2",
+        "text": "then we can have a little discussion about the new project requirements, which"
+    },
+    {
+        "start": "00:02:43",
+        "end": "00:02:46",
+        "speaker": "Speaker 3",
+        "text": "I think is sent to me,"
+    },
+    {
+        "start": "00:02:46",
+        "end": "00:02:53",
+        "speaker": "Speaker 0",
+        "text": "and then the decision on the control functions."
+    },
+    {
+        "start": "00:02:53",
+        "end": "00:02:53",
+        "speaker": "Speaker 1",
+        "text": "I don't know what I mean in this"
+    },
+    {
+        "start": "00:02:53",
+        "end": "00:03:14",
+        "speaker": "Speaker 0",
+        "text": "world. Yeah, I think you will tell me your presentation as well, which function you have."
+    },
+    {
+        "start": "00:03:26",
+        "end": "00:04:02",
+        "speaker": "Speaker 1",
+        "text": "My name is Rick. We've done some research. We've been doing research in a usability lab where we observe users operating remote controls. We let them fill out a questionnaire. We have 100 of these. In addition, we did some market research to see what the market consists of, what ages are involved. These are three quite astonishing"
+    },
+    {
+        "start": "00:04:02",
+        "end": "00:04:03",
+        "speaker": "Speaker 3",
+        "text": "results, I thought."
+    },
+    {
+        "start": "00:04:04",
+        "end": "00:04:11",
+        "speaker": "Speaker 1",
+        "text": "Remote are being considered ugly. 75% of the people"
+    },
+    {
+        "start": "00:04:11",
+        "end": "00:04:13",
+        "speaker": "Speaker 2",
+        "text": "questioned, indicated"
+    },
+    {
+        "start": "00:04:13",
+        "end": "00:08:37",
+        "speaker": "Speaker 1",
+        "text": "that they thought their remote were ugly. And an additional 80% indicated that it would spend more money on a fancy-looking remote control. In addition, remote were not very functional. 50% of the people indicated they only use about 10% of the buttons on a remote control. And 50% of the people indicated that their remote tended to get lost in their room. did some research to do the most relevant functions. Channel selection and volume selection both got a 10 on a scale of 1 to 10 for relevancy. The power button got a nine, and 10 attacks got a six and a half. So these are the most important functions of remote control. And then there are some one-time views function. That's what I like to call them. There are audio settings, video settings, and channel settings buttons, which are not really used very frequently, but are still considered to be of some importance. Channel selection was also indicated to be used very frequently, 168 times per hour. And these are the, this is the market. 60% of the market consists of users between the ages 16 and 46. The main characteristic of this group is that they're very critical on the remote control. They like to use new functions, but they also are very critical. They won't spend their money very easily. So the users of 46 to 65 years they make up 40% of the market. They're not really very interested in features, but they do tend to spend their money a lot easier. Well, I think this indicates for design. I think we should make a remote for the future. And this means we have to focus on the ages 16 to 45. This also makes up most of the biggest part of the market, so there will also be where our main profit will be. This would mean we would have to make a fancy design. The results also indicated that about one quarter of the people questioned thought that remote control caused RSI. This is certainly something to take into account. 34% thought that it was hard to learn how to operate remote control. So these are two factors that I think should be included in the design. in the design. Decides, of course, that the remote must look very nice. Functionality, as a lot of people indicated, they only use about 10% of the buttons. I think we should make very few buttons. This will also be beneficial to the design of the remote. I think the most frequently used buttons should be emphasized, especially the channel selection and audio selection buttons, because they're used most and so they should be robust. They shouldn't break down easily. Then, as a lot of people indicated that their remote got lost in the room, it might be, and I say it might be because it would certainly boost the production costs a lot, but it might be a good idea to make a docking station. This could get a button. This could get a button in it, which would send the signal to the remote which would then beep, so you'd know where it is in the room. And in addition to this, it could recharge the batteries in the remote if you put it in. Then, surprisingly, a great deal of people indicated that an LCD screen in the remote control would be preferred. This was"
+    },
+    {
+        "start": "00:08:37",
+        "end": "00:08:39",
+        "speaker": "Speaker 3",
+        "text": "mostly"
+    },
+    {
+        "start": "00:08:39",
+        "end": "00:09:00",
+        "speaker": "Speaker 1",
+        "text": "people in the age of 16 to 25, but up to 45 it remains feasible. This would also greatly increase the production cost, but I think these are just some small factors we could consider. Okay. That would be all. Thank you."
+    },
+    {
+        "start": "00:09:01",
+        "end": "00:09:11",
+        "speaker": "Speaker 0",
+        "text": "Anybody have any questions? Any questions? Okay, that's good. Okay, that's clear. Yeah, I'll take a second."
+    },
+    {
+        "start": "00:09:20",
+        "end": "00:09:31",
+        "speaker": "Speaker 2",
+        "text": "OK, let me know if you have the usual interface for the technical functions of it."
+    },
+    {
+        "start": "00:09:34",
+        "end": "00:09:41",
+        "speaker": "Speaker 0",
+        "text": "Yeah, you can take your time, we've got plenty of time. Topping, slideshow."
+    },
+    {
+        "start": "00:09:44",
+        "end": "00:11:18",
+        "speaker": "Speaker 2",
+        "text": "Yeah, I think we must use the general functions of the remote control. I think I've done a little research on the internet. We have not much information about it, about the interface. I've been thinking about a simple manner to put a lot of functions in one remote control. One remote control, so you've got a lot of devices like the television stereo, but it must be user friendly, so you can put a lot of functions in one remote control, but yeah. So, yeah, got many functions in one remote control, but you can see this is quite simple remote control, few buttons, but this remote control got a lot of buttons, yeah, people don't like it, so what I was thinking about was"
+    },
+    {
+        "start": "00:11:18",
+        "end": "00:11:20",
+        "speaker": "Speaker 3",
+        "text": "to"
+    },
+    {
+        "start": "00:11:20",
+        "end": "00:13:00",
+        "speaker": "Speaker 2",
+        "text": "keep the general functions like the yards, like the on-off button, keep it like a red button, everybody knows it, so you don't have to change that. My personal preferences, it was a display for special functions of the I was thinking about what you've got. This is the remote control, you've got here the general functions like the on-off button, sound, I don't know, here you've got a kind of display, it's a touch screen, you've got general functions of the device for a DVD player or so, for playing, reverse, etc. You've got here real buttons for selecting a device, so little buttons for a DVD or so. So for every device you've got a part display of a part buttons, so"
+    },
+    {
+        "start": "00:13:00",
+        "end": "00:13:02",
+        "speaker": "Speaker 3",
+        "text": "you never"
+    },
+    {
+        "start": "00:13:02",
+        "end": "00:13:42",
+        "speaker": "Speaker 2",
+        "text": "got all the buttons on one... all the buttons on one device. So that's my idea about it. Yeah, and let's see, yeah, so touch screen. And the real buttons we have to use, we better use quite large buttons for everybody after you use it. So even for all people, young people, so we must keep buttons quite simple and quite large. So,"
+    },
+    {
+        "start": "00:13:46",
+        "end": "00:13:50",
+        "speaker": "Speaker 3",
+        "text": "yeah, yeah, that"
+    },
+    {
+        "start": "00:13:50",
+        "end": "00:13:53",
+        "speaker": "Speaker 2",
+        "text": "was my part of it. Any other questions"
+    },
+    {
+        "start": "00:13:53",
+        "end": "00:14:00",
+        "speaker": "Speaker 0",
+        "text": "about the technical functions? Well, I think if we're gonna use a touch screen, we're gonna go way above the 12 and a half euros. Yeah. I don't."
+    },
+    {
+        "start": "00:14:00",
+        "end": "00:14:03",
+        "speaker": "Speaker 3",
+        "text": "I don't"
+    },
+    {
+        "start": "00:14:03",
+        "end": "00:14:25",
+        "speaker": "Speaker 2",
+        "text": "I think so. You've got quite a cheap touch screen. It's not in color or something. It's just one color. I've seen something on the internet, not today, but a few weeks ago. You've got quite a cheap touch screen or a lash, so it's possible."
+    },
+    {
+        "start": "00:14:25",
+        "end": "00:14:44",
+        "speaker": "Speaker 3",
+        "text": "a"
+    },
+    {
+        "start": "00:14:44",
+        "end": "00:14:45",
+        "speaker": "Speaker 3",
+        "text": "possible."
+    },
+    {
+        "start": "00:14:45",
+        "end": "00:14:48",
+        "speaker": "Speaker 1",
+        "text": "Well, we certainly make a fancy design."
+    },
+    {
+        "start": "00:14:49",
+        "end": "00:15:04",
+        "speaker": "Speaker 0",
+        "text": "It wouldn't be very robust, it's very fragile and you can get scratches on it. That is true. Maybe we can first listen to your presentation. Then we'll have a little discussion about the requirements."
+    },
+    {
+        "start": "00:15:23",
+        "end": "00:15:26",
+        "speaker": "Speaker 1",
+        "text": "Okay, I've got a presentation about the working design."
+    },
+    {
+        "start": "00:15:28",
+        "end": "00:15:42",
+        "speaker": "Speaker 0",
+        "text": "First about how it works, it's really simple. Of course, everybody knows how the remote works. The user presses a button. The remote determines what button it is. It uses the infrared to send a signal to the TV. The TV switches to the frequency or what function"
+    },
+    {
+        "start": "00:15:42",
+        "end": "00:15:43",
+        "speaker": "Speaker 3",
+        "text": "it is."
+    },
+    {
+        "start": "00:15:43",
+        "end": "00:16:23",
+        "speaker": "Speaker 0",
+        "text": "So, we've got the plate. It's got conductive disks for every button. When the user presses a button, the signal goes to the lab and transmits it to the TV. It's a very simple device technology. So, this is a schematic overview. You've got the buttons, the power source. And when a button gets pressed, it goes to the chip. The chip controls the infrared bulb. Perhaps a normal bulb. When you press a button, you can actually see your pressed button."
+    },
+    {
+        "start": "00:16:25",
+        "end": "00:16:26",
+        "speaker": "Speaker 3",
+        "text": "Well,"
+    },
+    {
+        "start": "00:16:26",
+        "end": "00:16:30",
+        "speaker": "Speaker 0",
+        "text": "I think we should use default materials, simple"
+    },
+    {
+        "start": "00:16:30",
+        "end": "00:16:30",
+        "speaker": "Speaker 1",
+        "text": "plastics,"
+    },
+    {
+        "start": "00:16:30",
+        "end": "00:16:58",
+        "speaker": "Speaker 0",
+        "text": "keep the inner working simple so it's robust. I think we should focus on aesthetics, the design and the user interface because if you're going to use high tech materials the price is going to go to sky. You only have to design a remote once, and if you use high tech materials, it'll come back in every product. So it's, in my idea, it's gonna be smart to invest in design and not in"
+    },
+    {
+        "start": "00:16:58",
+        "end": "00:16:59",
+        "speaker": "Speaker 3",
+        "text": "the product"
+    },
+    {
+        "start": "00:16:59",
+        "end": "00:17:03",
+        "speaker": "Speaker 0",
+        "text": "itself. That's it. Okay, thank you."
+    },
+    {
+        "start": "00:17:11",
+        "end": "00:17:11",
+        "speaker": "Speaker 3",
+        "text": "Okay."
+    },
+    {
+        "start": "00:17:24",
+        "end": "00:18:45",
+        "speaker": "Speaker 0",
+        "text": "More insight in the functions we all have and what we're doing right now. I'm the project manager, so I'm here to mess things up. There are some new requirements. We've got to design a remote which is only suitable for TV. That's because it will be too complex and the time to market will be too big if we want to have it for more functions. So it has to be simple. Another point is we have to skip the data text because in the world of upcoming internet we think data text is going to be a thing of the past. It's a function we don't need in our remote control. Internet is also mentioned just go in a function you can use maybe also on televisions it will be available as well. Another one is the customer is 40 plus that's the market we have to target because we are going to develop a new product which is specially designed for the younger customers."
+    },
+    {
+        "start": "00:18:47",
+        "end": "00:18:48",
+        "speaker": "Speaker 3",
+        "text": "This"
+    },
+    {
+        "start": "00:18:48",
+        "end": "00:19:03",
+        "speaker": "Speaker 0",
+        "text": "is a bit pity for the marketing expert because he was aiming on the younger persons. So we have to find a market which is above 40 plus which will suit our remote"
+    },
+    {
+        "start": "00:19:03",
+        "end": "00:19:04",
+        "speaker": "Speaker 3",
+        "text": "control and the"
+    },
+    {
+        "start": "00:19:04",
+        "end": "00:19:31",
+        "speaker": "Speaker 0",
+        "text": "other way around. And we have to be very putting a corporate image in our product that has to be visible in our design in the way our device works. and we have to be very clear on this point as well. So I suggest that we have a discussion on the control functions."
+    },
+    {
+        "start": "00:19:31",
+        "end": "00:19:37",
+        "speaker": "Speaker 1",
+        "text": "So is there any discussion possible about the new project requirements?"
+    },
+    {
+        "start": "00:19:39",
+        "end": "00:19:49",
+        "speaker": "Speaker 0",
+        "text": "We can see if we can find a way between the functions we want to use, and the market we want to reach with our product. Yeah, because"
+    },
+    {
+        "start": "00:19:49",
+        "end": "00:19:53",
+        "speaker": "Speaker 1",
+        "text": "you're saying that Teletext is going to be"
+    },
+    {
+        "start": "00:19:53",
+        "end": "00:19:53",
+        "speaker": "Speaker 3",
+        "text": "an"
+    },
+    {
+        "start": "00:19:53",
+        "end": "00:20:28",
+        "speaker": "Speaker 1",
+        "text": "old feature, and it's not going to be used anymore anyway pretty soon, and new TVs will have internet access on them. But I think if you're targeting people of 40 +, the chance that they will have a TV with internet access within the next 20 years is very slim. In addition, people indicated that Teletext simply was an important feature for the remote control. So I think it's pretty dumb to put no Teletext feature on it. I'm pretty much against it."
+    },
+    {
+        "start": "00:20:28",
+        "end": "00:20:35",
+        "speaker": "Speaker 0",
+        "text": "Against the no Teletext? Yes. Um besides"
+    },
+    {
+        "start": "00:20:35",
+        "end": "00:20:47",
+        "speaker": "Speaker 1",
+        "text": "that I think the market for 40 plus is like pretty small But I think we're just gonna"
+    },
+    {
+        "start": "00:20:47",
+        "end": "00:20:50",
+        "speaker": "Speaker 0",
+        "text": "go for another step pretty"
+    },
+    {
+        "start": "00:20:51",
+        "end": "00:20:54",
+        "speaker": "Speaker 1",
+        "text": "No, I think we can not innovative"
+    },
+    {
+        "start": "00:20:55",
+        "end": "00:21:04",
+        "speaker": "Speaker 0",
+        "text": "I think we can do a lot with the design and the simple buttons which are also mentioned. Uh, if we put a lot of effort in those"
+    },
+    {
+        "start": "00:21:04",
+        "end": "00:21:05",
+        "speaker": "Speaker 3",
+        "text": "we"
+    },
+    {
+        "start": "00:21:05",
+        "end": "00:21:29",
+        "speaker": "Speaker 0",
+        "text": "can make a remote control with just two or three buttons or just to remote which is suitable for the market you want to reach because it is 40 percent of the market and if you look in Holland at the whole generation of 40 plus 50 plus it's the biggest share of the of the whole population now"
+    },
+    {
+        "start": "00:21:30",
+        "end": "00:21:46",
+        "speaker": "Speaker 1",
+        "text": "Yes, but it's not the biggest part of the market. And besides that, they're not very critical. So, I mean, they don't really care what the remote control is like. They'll just pretty much take the first thing they see and which looks acceptable."
+    },
+    {
+        "start": "00:21:48",
+        "end": "00:22:05",
+        "speaker": "Speaker 0",
+        "text": "But don't you think that if we make a remote which is typically made for this market, that people think from the people thing, that's the device I've looked for, although I didn't realize it. So, let's"
+    },
+    {
+        "start": "00:22:05",
+        "end": "00:22:30",
+        "speaker": "Speaker 1",
+        "text": "try it. No. I think that would be the case in the 16 to 45 category. Because they are critical and they want to have a fancy remote control. People of 40 plus, I mean, they want it to work. But as soon as it works, it's OK with them. okay with them."
+    },
+    {
+        "start": "00:22:31",
+        "end": "00:22:43",
+        "speaker": "Speaker 0",
+        "text": "Yeah, I think that if we're, if we put our marketing right, we can sell this just like, I don't know if you've heard about it in the news, the elderly mobile phone. Yeah,"
+    },
+    {
+        "start": "00:22:43",
+        "end": "00:22:46",
+        "speaker": "Speaker 1",
+        "text": "it's a big success. Yeah, if we make a remote control,"
+    },
+    {
+        "start": "00:22:46",
+        "end": "00:22:49",
+        "speaker": "Speaker 0",
+        "text": "just with that idea in mind, we could"
+    },
+    {
+        "start": "00:22:49",
+        "end": "00:22:54",
+        "speaker": "Speaker 3",
+        "text": "make tons of money."
+    },
+    {
+        "start": "00:22:54",
+        "end": "00:22:57",
+        "speaker": "Speaker 0",
+        "text": "Yeah, we don't have to focus on the design then, but on functionality."
+    },
+    {
+        "start": "00:22:57",
+        "end": "00:23:48",
+        "speaker": "Speaker 0",
+        "text": "We just change our focus on the project and I think we can we can sell this. I simply think that the new products we're gonna make specifically designed for younger people. So maybe we can focus ourselves on the elderly people. And I think we have to see what requirements we need for those remote controls. Because what you told is the channel selection is important. Yes. Volume selection, power and data text. Yes. Okay."
+    },
+    {
+        "start": "00:23:49",
+        "end": "00:23:52",
+        "speaker": "Speaker 1",
+        "text": "But obviously the board tends to disagree."
+    },
+    {
+        "start": "00:23:53",
+        "end": "00:24:16",
+        "speaker": "Speaker 0",
+        "text": "No, we haven't voted yet. I think data text can be a function as well. But only if it won't hire the cost. Because I don't know if it will be a lot more money to implement data text as well. But I don't think it will be a problem."
+    },
+    {
+        "start": "00:24:18",
+        "end": "00:24:19",
+        "speaker": "Speaker 3",
+        "text": "Where is data text?"
+    },
+    {
+        "start": "00:24:19",
+        "end": "00:24:24",
+        "speaker": "Speaker 2",
+        "text": "Deaf people need data text for a subtitle. Yeah."
+    },
+    {
+        "start": "00:24:25",
+        "end": "00:24:25",
+        "speaker": "Speaker 2",
+        "text": "I"
+    },
+    {
+        "start": "00:24:26",
+        "end": "00:24:26",
+        "speaker": "Speaker 1",
+        "text": "So I suggest..."
+    },
+    {
+        "start": "00:24:25",
+        "end": "00:24:29",
+        "speaker": "Speaker 1",
+        "text": "think it would definitely be a bad idea not to include"
+    },
+    {
+        "start": "00:24:29",
+        "end": "00:24:30",
+        "speaker": "Speaker 3",
+        "text": "data text."
+    },
+    {
+        "start": "00:24:30",
+        "end": "00:24:33",
+        "speaker": "Speaker 0",
+        "text": "Is anybody really against data text?"
+    },
+    {
+        "start": "00:24:33",
+        "end": "00:24:38",
+        "speaker": "Speaker 3",
+        "text": "I'm going to keep the"
+    },
+    {
+        "start": "00:24:38",
+        "end": "00:24:49",
+        "speaker": "Speaker 0",
+        "text": "title text as well especially for the subtitles. Maybe we can make"
+    },
+    {
+        "start": "00:24:49",
+        "end": "00:24:53",
+        "speaker": "Speaker 3",
+        "text": "that another"
+    },
+    {
+        "start": "00:24:53",
+        "end": "00:25:09",
+        "speaker": "Speaker 0",
+        "text": "point of advantage in our remote control. We make a button for example for big subtitles which is instantly on the remote control for elderly people that they can think I want to subtitle, push the button and you get"
+    },
+    {
+        "start": "00:25:09",
+        "end": "00:25:10",
+        "speaker": "Speaker 3",
+        "text": "the big"
+    },
+    {
+        "start": "00:25:10",
+        "end": "00:25:11",
+        "speaker": "Speaker 0",
+        "text": "subtitles."
+    },
+    {
+        "start": "00:25:11",
+        "end": "00:25:15",
+        "speaker": "Speaker 3",
+        "text": "So I"
+    },
+    {
+        "start": "00:25:15",
+        "end": "00:25:26",
+        "speaker": "Speaker 0",
+        "text": "I think the ad-tax can be very useful in our advantage. Functionality should be few buttons, you said?"
+    },
+    {
+        "start": "00:25:27",
+        "end": "00:25:27",
+        "speaker": "Speaker 2",
+        "text": "Yes."
+    },
+    {
+        "start": "00:25:35",
+        "end": "00:25:36",
+        "speaker": "Speaker 0",
+        "text": "Simple."
+    },
+    {
+        "start": "00:25:37",
+        "end": "00:25:46",
+        "speaker": "Speaker 1",
+        "text": "I don't think it's really an issue anymore, because it might be. If it's only for TV, you're not going to need a lot of"
+    },
+    {
+        "start": "00:25:46",
+        "end": "00:25:46",
+        "speaker": "Speaker 0",
+        "text": "buttons anyway."
+    },
+    {
+        "start": "00:25:46",
+        "end": "00:26:23",
+        "speaker": "Speaker 1",
+        "text": "You'll need a 1 to 0 button, next channel, previous channel, volume up, volume down, and some teletext buttons. If you want to switch from channel 1 to like 35, you don't want to push the next channel"
+    },
+    {
+        "start": "00:26:23",
+        "end": "00:26:41",
+        "speaker": "Speaker 0",
+        "text": "button 35 times. Maybe you can implement a scroll button or a joystick. There are other ways to do that. If you look at telephones, the Sony telephone has a scroll button, which is very useful in searching names."
+    },
+    {
+        "start": "00:26:42",
+        "end": "00:27:07",
+        "speaker": "Speaker 1",
+        "text": "That is true, but I don't think there are many TVs that can switch channels that fast. So the TV would need a function where you can actually view all channels and scroll through it. I don't know if many channels do have many TVs. Besides"
+    },
+    {
+        "start": "00:27:07",
+        "end": "00:27:34",
+        "speaker": "Speaker 0",
+        "text": "that, if we're going to focus on elderly people, they'll have to adapt. They're not used to using scroll buttons. Perhaps we should stick to the basic layout. We can see how much buttons there are going to be on the display, and if it's too much, we can reconsider it. I think there won't be very much buttons. I"
+    },
+    {
+        "start": "00:27:34",
+        "end": "00:27:56",
+        "speaker": "Speaker 1",
+        "text": "think if you're going to make remote control only to operate a TV, there's not much you can gain on having a few buttons as possible, because I think there are pretty many remote controls that can only operate a TV, which already only have the minimum number of buttons. I don't think there's much to be gained in that area, the number of"
+    },
+    {
+        "start": "00:27:56",
+        "end": "00:28:10",
+        "speaker": "Speaker 0",
+        "text": "buttons. I think it's very important in the design. You can make a very fancy design with putting the buttons in the right places. If you have less buttons, you can do a lot more."
+    },
+    {
+        "start": "00:28:10",
+        "end": "00:28:35",
+        "speaker": "Speaker 1",
+        "text": "That is true, but I think there's simply not much to gain on the competition when you're making a remote control only to operate only the TV. To operate only the TV. If you have a remote control only to operate a TV, there's simply not a lot of buttons required. There's not a lot of functions required. there's not a lot of functions required so most existing remote controls simply don't have a lot of buttons either"
+    },
+    {
+        "start": "00:28:35",
+        "end": "00:28:37",
+        "speaker": "Speaker 3",
+        "text": "so"
+    },
+    {
+        "start": "00:28:37",
+        "end": "00:28:58",
+        "speaker": "Speaker 1",
+        "text": "I think it would be very hard to actually gain on the competition here okay so it can that would cost a big marketing expedition which was one of the arguments to make it only for the tv because we didn't have the time to market a lot yeah so"
+    },
+    {
+        "start": "00:28:58",
+        "end": "00:29:13",
+        "speaker": "Speaker 0",
+        "text": "you suggest we could better focus on for example the docking station like other functions instead of less buttons well"
+    },
+    {
+        "start": "00:29:13",
+        "end": "00:29:21",
+        "speaker": "Speaker 1",
+        "text": "yeah I think I mean we obviously needed a good way to position all the buttons but I don't think we should spend very much time in that"
+    },
+    {
+        "start": "00:29:24",
+        "end": "00:29:30",
+        "speaker": "Speaker 0",
+        "text": "do you think the docking station will is allowed in the Is it allowed in the budget we"
+    },
+    {
+        "start": "00:29:30",
+        "end": "00:29:32",
+        "speaker": "Speaker 3",
+        "text": "have? It"
+    },
+    {
+        "start": "00:29:32",
+        "end": "00:29:38",
+        "speaker": "Speaker 0",
+        "text": "should be possible, yes. It's not too fancy. And if the remote stays rather small, it should be possible."
+    },
+    {
+        "start": "00:29:38",
+        "end": "00:29:40",
+        "speaker": "Speaker 2",
+        "text": "I think"
+    },
+    {
+        "start": "00:29:40",
+        "end": "00:29:58",
+        "speaker": "Speaker 0",
+        "text": "that's a good advantage point as well. If we have a fancy looking docking station. so we're just gonna focus on the extras"
+    },
+    {
+        "start": "00:29:58",
+        "end": "00:30:10",
+        "speaker": "Speaker 3",
+        "text": "I"
+    },
+    {
+        "start": "00:30:10",
+        "end": "00:30:16",
+        "speaker": "Speaker 1",
+        "text": "think so yeah maybe we should do some research to what other people like to have you know yeah like to have extra in remote control"
+    },
+    {
+        "start": "00:30:16",
+        "end": "00:30:18",
+        "speaker": "Speaker 0",
+        "text": "You said they easily get lost as well."
+    },
+    {
+        "start": "00:30:18",
+        "end": "00:30:23",
+        "speaker": "Speaker 1",
+        "text": "Yes, well, 50% of the people indicated that remote"
+    },
+    {
+        "start": "00:30:23",
+        "end": "00:30:28",
+        "speaker": "Speaker 0",
+        "text": "control tended to get lost. So maybe we should implement the audio side or"
+    },
+    {
+        "start": "00:30:28",
+        "end": "00:30:30",
+        "speaker": "Speaker 1",
+        "text": "something. Yeah, that was what I suggested."
+    },
+    {
+        "start": "00:30:30",
+        "end": "00:30:33",
+        "speaker": "Speaker 0",
+        "text": "Like, we have a keychain if you play solid games."
+    },
+    {
+        "start": "00:30:34",
+        "end": "00:30:43",
+        "speaker": "Speaker 1",
+        "text": "You have some phones too, which have a docking station. You just press a button and the phone goes ringing. So you"
+    },
+    {
+        "start": "00:30:43",
+        "end": "00:31:04",
+        "speaker": "Speaker 0",
+        "text": "know where it is. The audio signal could be possible as well. I think it's not too expensive. Another point is the LCD screen. I don't know if that will rise the cost too much."
+    },
+    {
+        "start": "00:31:05",
+        "end": "00:31:21",
+        "speaker": "Speaker 1",
+        "text": "I think we'll have to choose between the docking station or the screen cost. Yeah, so it's going to be too much. I think since a lot of people indicated that a new remote control was hard."
+    },
+    {
+        "start": "00:31:21",
+        "end": "00:31:22",
+        "speaker": "Speaker 1",
+        "text": "indicate that a new remote control is hard to learn and we're focusing on elderly people here which tend to have a hard time understanding new devices it"
+    },
+    {
+        "start": "00:31:23",
+        "end": "00:31:37",
+        "speaker": "Speaker 1",
+        "text": "might be a good idea to have just a little screen on it which would explain a button if you press it which would tell you what it does yeah and it wouldn't have to be touch screen or a very expensive screen but"
+    },
+    {
+        "start": "00:31:37",
+        "end": "00:31:42",
+        "speaker": "Speaker 0",
+        "text": "just the LCD or just a normal screen just"
+    },
+    {
+        "start": "00:31:42",
+        "end": "00:31:52",
+        "speaker": "Speaker 1",
+        "text": "a small screen to some extra info yeah yeah I think that's a good idea as well but I"
+    },
+    {
+        "start": "00:31:52",
+        "end": "00:31:53",
+        "speaker": "Speaker 3",
+        "text": "don't know if that would it"
+    },
+    {
+        "start": "00:31:53",
+        "end": "00:32:56",
+        "speaker": "Speaker 0",
+        "text": "Let's see, what did we say? More. Fancy design, easy to learn. A few buttons, we talked about that. Talking station, LCD. General functions. default materials. I think that's a good idea as well because elderly people don't mind if it's a titanium cover or just a plastic one. So it doesn't really matter."
+    },
+    {
+        "start": "00:32:57",
+        "end": "00:33:05",
+        "speaker": "Speaker 1",
+        "text": "So I think probably elderly people would be a little bit more careful with their remote controls and youngsters."
+    },
+    {
+        "start": "00:33:08",
+        "end": "00:33:42",
+        "speaker": "Speaker 0",
+        "text": "Let's specify the target group. Are we talking about elderly people or people from 40 to 80 because I think what we're going to design now is for people above 60 maybe. What do we want if we want to profilate us with, for example, the telephone for elderly people, we can target the real elderly people?"
+    },
+    {
+        "start": "00:33:44",
+        "end": "00:34:01",
+        "speaker": "Speaker 1",
+        "text": "I think that would be, if we should do something like that, I think it would be really good for the image of the company. And I think there would be a good market for it. So we're able to really bring an innovative product."
+    },
+    {
+        "start": "00:34:01",
+        "end": "00:34:03",
+        "speaker": "Speaker 0",
+        "text": "And you're talking about 62, 80, for example?"
+    },
+    {
+        "start": "00:34:03",
+        "end": "00:34:06",
+        "speaker": "Speaker 1",
+        "text": "Yeah, really."
+    },
+    {
+        "start": "00:34:11",
+        "end": "00:34:11",
+        "speaker": "Speaker 3",
+        "text": "a little more"
+    },
+    {
+        "start": "00:34:11",
+        "end": "00:34:19",
+        "speaker": "Speaker 0",
+        "text": "okay and different cultures I don't think they have"
+    },
+    {
+        "start": "00:34:19",
+        "end": "00:34:20",
+        "speaker": "Speaker 1",
+        "text": "different television sets"
+    },
+    {
+        "start": "00:34:27",
+        "end": "00:34:30",
+        "speaker": "Speaker 0",
+        "text": "got five minutes left. And"
+    },
+    {
+        "start": "00:34:30",
+        "end": "00:34:40",
+        "speaker": "Speaker 1",
+        "text": "with the little screen in it, which explains the buttons, I think it would be a lot easier to adapt it to different cultures."
+    },
+    {
+        "start": "00:34:41",
+        "end": "00:35:33",
+        "speaker": "Speaker 0",
+        "text": "Yeah, in different languages. Or you have to put a language button that will be a bit unnecessary. It's better to put it on different markets. That's it. So that's the target. And then, a few small things. OK, I will put the minutes in the project document folder. What we're going to do for the next meeting is the industrial designer will do the components concept. The industrial designer is using the face concept and the trend watching. So just keep in mind the things we've said. We've said about the target group and the requirements and the trends which we're going"
+    },
+    {
+        "start": "00:35:33",
+        "end": "00:35:39",
+        "speaker": "Speaker 3",
+        "text": "to know and the specific instructions they'll be sent to you by a personal coach."
+    }
+]

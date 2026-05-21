@@ -1,0 +1,72 @@
+PHẦN 1: Đánh giá Khâu Tìm Kiếm (Retrieval Metrics)
+Đây là nhóm chỉ số quan trọng nhất để đo lường xem việc cắt chunk 40 từ có giúp Qdrant tìm chính xác hơn việc để nguyên 1 câu ASR hay không.
+
+1. Hit Rate (Tỷ lệ trúng đích) @K
+
+Định nghĩa: Trong Top K (ví dụ Top 5) chunk mà Qdrant trả về, có xuất hiện đoạn văn chứa câu trả lời đúng (Ground Truth) hay không?
+
+Ví dụ: Bạn có 50 câu hỏi test. Với cách cũ, chỉ 30 lần Qdrant kéo lên đúng đoạn hội thoại cần thiết -> Hit Rate = 30/50 = 60%. Với cách mới (Parent Document), Qdrant kéo trúng 42 lần -> Hit Rate = 84%.
+
+Ý nghĩa: Chỉ số này đo lường xem chunking mới có giúp giảm việc "bỏ sót" thông tin hay không.
+
+2. MRR (Mean Reciprocal Rank)
+
+Định nghĩa: Đo lường xem đoạn văn đúng nằm ở vị trí cao hay thấp trong danh sách kết quả.
+
+Cách tính: * Nếu chunk đúng nằm ở Top 1 -> 1 điểm.
+
+Nằm ở Top 2 -> 1/2 = 0.5 điểm.
+
+Nằm ở Top 3 -> 1/3 = 0.33 điểm.
+
+Không có trong Top K -> 0 điểm.
+
+Ý nghĩa: Chunking tốt không chỉ là "tìm thấy", mà phải đưa cái đúng nhất lên đầu tiên để Reranker và LLM đỡ tốn sức đọc rác. MRR càng gần 1 càng tốt.
+
+3. Precision/Recall của Context
+
+Precision (Độ chính xác): Trong 5 đoạn Qdrant đưa lên, có bao nhiêu đoạn thực sự liên quan đến câu hỏi? (Cách cũ thường lấy lên nhiều câu "Yeah", "Okay" bị tính là rác -> Precision thấp).
+
+Recall (Độ phủ): Cửa sổ ngữ cảnh (Context Window) có bao quát đủ ý để trả lời không? (Cửa sổ rộng theo cách mới sẽ có Recall cao hơn).
+
+PHẦN 2: Đánh giá Khâu Trả Lời (End-to-End / Generation Metrics)
+Sau khi tìm xong, LLM đọc và trả lời. Chunking tốt sẽ giúp LLM trả lời tốt hơn.
+
+1. Faithfulness (Độ trung thực)
+
+Đo lường xem câu trả lời của Bot có hoàn toàn dựa trên Context được cung cấp hay không, hay là nó đang "bịa" (Hallucination).
+
+Nếu chia chunk quá nhỏ làm mất ngữ cảnh, LLM có xu hướng tự bịa thêm thông tin. Nếu cách mới giúp Faithfulness tăng, chứng tỏ Context đưa vào rất đầy đủ ý nghĩa.
+
+2. Answer Correctness (Độ chính xác của câu trả lời)
+
+So sánh câu trả lời của Bot với "Câu trả lời chuẩn" (Ground Truth) mà bạn tự soạn ra. Có khớp ý không?
+
+HƯỚNG DẪN THỰC HÀNH: Làm sao để đo cho đồ án của bạn?
+Bạn không cần phải tự ngồi đếm tay. Hiện nay có một phương pháp gọi là LLM-as-a-Judge (Dùng AI làm giám khảo) rất phổ biến.
+
+Bước 1: Tạo "Golden Dataset" (Tập dữ liệu Vàng)
+Bạn tạo một file Excel/CSV gồm khoảng 20-30 dòng. Cấu trúc giống hệt bộ 5 câu hỏi tớ làm cho bạn hôm trước, gồm 3 cột:
+
+Question: Câu hỏi
+
+Ground_Truth: Câu trả lời đúng.
+
+Reference_Context_ID: ID của câu hội thoại chứa đáp án (vd: utt_55).
+
+Bước 2: Chạy thử nghiệm (A/B Testing)
+
+Hệ thống A (Baseline): Code RAG cũ của bạn (1 câu = 1 chunk). Cho bot chạy tự động trả lời 30 câu hỏi trên, lưu lại (Context tìm được, Câu trả lời của Bot).
+
+Hệ thống B (Mới): Code RAG có hàm _chunk_text và mở rộng Context. Cho bot chạy 30 câu hỏi, lưu lại.
+
+Bước 3: Dùng tool tự động chấm điểm
+Thay vì tự chấm, bạn hãy tìm hiểu framework RAGAS (RAG Assessment) hoặc TruLens. Đây là 2 thư viện Python sinh ra đúng cho mục đích này.
+
+Bạn đưa file kết quả Hệ thống A và Hệ thống B cho RAGAS.
+
+Nó sẽ gọi API của LLM (như OpenAI hoặc chính Gemini), LLM sẽ tự động phân tích và nhả ra cho bạn một cái bảng điểm rực rỡ (ví dụ: Hit Rate: 0.85, Faithfulness: 0.9...).
+
+Kết luận trong Báo cáo Đồ án của bạn sẽ trông như thế này:
+
+"Nhóm chúng em đã tiến hành đo lường hiệu suất RAG trên bộ 30 câu hỏi QA. Kết quả cho thấy: Khi áp dụng chiến lược Parent Document Retrieval với cấu hình (Chunk=40, Overlap=10), chỉ số Hit Rate@5 tăng từ 55% lên 85%, đồng thời chỉ số MRR tăng từ 0.4 lên 0.7 so với phương pháp chia chunk gốc. Điều này chứng minh thuật toán mới giúp Vector Database biểu diễn ngữ nghĩa của file ASR chính xác và chịu nhiễu tốt hơn."
