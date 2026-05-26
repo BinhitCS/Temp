@@ -1,7 +1,7 @@
 import json
 import os
 import re
-import time 
+import time
 import google.generativeai as genai
 from dotenv import load_dotenv
 from google.api_core.exceptions import InvalidArgument
@@ -9,29 +9,31 @@ from google.api_core.exceptions import InvalidArgument
 # ----- Cài đặt Thư viện OSS (Mã nguồn mở) -----
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import (
-    Distance, VectorParams, PointStruct,
+    Distance,
+    VectorParams,
+    PointStruct,
     HnswConfigDiff,
-    Filter, FieldCondition, MatchText, MatchValue
+    Filter,
+    FieldCondition,
+    MatchText,
+    MatchValue,
+    Range,  # THÊM TÍNH NĂNG LỌC THEO KHOẢNG THỜI GIAN
 )
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
 # ----- (Bước 3) Cấu hình Google Gemini -----
-# Load environment variables from .env (if present)
 load_dotenv()
-
-# Read API key from environment variable `GOOGLE_API_KEY`
-# Fallback remains a placeholder to help detect missing config
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "YOUR_GOOGLE_API_KEY")
 
 llm_model = None
 try:
-    # Guard: missing or still the placeholder
     if not GOOGLE_API_KEY or "YOUR_GOOGLE_API_KEY" in GOOGLE_API_KEY:
-        raise InvalidArgument("Vui lòng dán API Key của bạn vào biến môi trường GOOGLE_API_KEY.")
+        raise InvalidArgument(
+            "Vui lòng dán API Key của bạn vào biến môi trường GOOGLE_API_KEY."
+        )
 
-    genai.configure(api_key=GOOGLE_API_KEY) # type: ignore
-    # Sử dụng Gemini variant phù hợp
-    llm_model = genai.GenerativeModel('gemini-2.5-flash') # type: ignore
+    genai.configure(api_key=GOOGLE_API_KEY)  # type: ignore
+    llm_model = genai.GenerativeModel("gemini-2.5-flash")  # type: ignore
     print("Đã kết nối thành công với Google Gemini.")
 
 except Exception as e:
@@ -44,183 +46,183 @@ EMBEDDING_DIM = None
 
 try:
     print("Đang tải model AI (có thể mất chút thời gian lần đầu)...")
-    # Tải model embedding
-    embed_model = SentenceTransformer('BAAI/bge-m3', device='cuda' if os.environ.get("CUDA_VISIBLE_DEVICES") else 'cpu')
+    embed_model = SentenceTransformer(
+        "BAAI/bge-m3",
+        device="cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu",
+    )
     EMBEDDING_DIM = embed_model.get_sentence_embedding_dimension()
-    
-    # Tải model reranker
-    rerank_model = CrossEncoder('BAAI/bge-reranker-large', device='cuda' if os.environ.get("CUDA_VISIBLE_DEVICES") else 'cpu')
+
+    rerank_model = CrossEncoder(
+        "BAAI/bge-reranker-large",
+        device="cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu",
+    )
     print("Tải model hoàn tất.")
 except Exception as e:
     print(f"LỖI TẢI MODEL: {e}")
 
 # -----------------------------------------------
 
+
 class RAGPipelineAdvanced:
     def __init__(self, input_file="input.txt"):
-        if not llm_model or not embed_model or not rerank_model or EMBEDDING_DIM is None:
+        if (
+            not llm_model
+            or not embed_model
+            or not rerank_model
+            or EMBEDDING_DIM is None
+        ):
             print("LỖI: Chưa khởi tạo được các Model AI. Dừng hệ thống.")
             self.client = None
             return
 
         self.input_file = input_file
-        
-        # Tạo tên Collection dựa trên tên file
-        # Ví dụ: file "trans_f1.json" -> collection "db_trans_f1_json"
-        
-        safe_name = re.sub(r'[^a-zA-Z0-9]', '_', os.path.basename(input_file))
-        self.collection_name = f"db_{safe_name}" 
-        # --------------------
-
+        safe_name = re.sub(r"[^a-zA-Z0-9]", "_", os.path.basename(input_file))
+        self.collection_name = f"db_{safe_name}"
         self.db_path = "./qdrant_db_storage"
-        self.chat_history = [] 
+        self.chat_history = []
         self.current_context = ""
-        
-        # 1. Khởi tạo Qdrant Client (On-disk)
+
         try:
             self.client = QdrantClient(path=self.db_path)
         except Exception as e:
             print(f"Lỗi khởi tạo Qdrant: {e}")
             self.client = None
             return
-        
-        # 2. Tải dữ liệu thô vào bộ nhớ (để lấy ngữ cảnh & tóm tắt)
+
         self.kb_memory = self._load_memory_kb()
-        if not self.kb_memory: 
+        if not self.kb_memory:
             self.client = None
             return
 
-        # 3. Kiểm tra và xây dựng lại CSDL Vector nếu cần
         self._check_and_build_db()
 
     def _load_input_data(self):
         try:
-            with open(self.input_file, 'r', encoding='utf-8') as f:
+            with open(self.input_file, "r", encoding="utf-8") as f:
                 content = f.read()
-            json_start = content.find('[')
-            if json_start == -1: return []
+            json_start = content.find("[")
+            if json_start == -1:
+                return []
             return json.loads(content[json_start:])
-        except Exception: return []
+        except Exception:
+            return []
 
     def _load_memory_kb(self):
         data = self._load_input_data()
-        if not data: return None
+        if not data:
+            return None
         kb = {"utterances": {}, "utterance_order": [], "full_text": ""}
         full_text_list = []
-        
-        # SỬA LỖI: Xử lý trường hợp thiếu key 'speaker'
+
         for i, utt in enumerate(data):
             utt_id = f"utt_{i}"
-            
-            # Gán giá trị mặc định nếu thiếu
-            speaker = utt.get('speaker', 'Unknown Speaker')
-            text = utt.get('text', '')
-            start = utt.get('start', 0)
-            
-            # Cập nhật lại utt với các key đảm bảo tồn tại
+            speaker = utt.get("speaker", "Unknown Speaker")
+            text = utt.get("text", "")
+            start = utt.get("start", 0)
+
+            # Chuyển đổi start time sang giây để dùng cho Filter Range
+            start_sec = 0
+            if isinstance(start, str):
+                try:
+                    h, m, s = map(int, start.split(":"))
+                    start_sec = h * 3600 + m * 60 + s
+                except:
+                    pass
+
             utt_safe = utt.copy()
-            utt_safe['speaker'] = speaker
-            utt_safe['text'] = text
-            utt_safe['start'] = start
-            
+            utt_safe["speaker"] = speaker
+            utt_safe["text"] = text
+            utt_safe["start"] = start
+            utt_safe["start_sec"] = start_sec  # Thêm start_sec
+
             kb["utterances"][utt_id] = utt_safe
             kb["utterance_order"].append(utt_id)
-            
-            # Tạo văn bản đầy đủ cho tính năng tóm tắt
             full_text_list.append(f"{speaker}: {text}")
-        
+
         kb["full_text"] = "\n".join(full_text_list)
         return kb
-    
+
     def _chunk_text(self, text, chunk_size=40, overlap=10):
-        """Chia văn bản dài thành các đoạn ngắn hơn dựa trên số từ."""
         words = text.split()
-        # Nếu câu ngắn hơn chunk_size, giữ nguyên
         if len(words) <= chunk_size:
             return [text]
-        
+
         chunks = []
         for i in range(0, len(words), chunk_size - overlap):
-            chunk_str = " ".join(words[i:i + chunk_size])
+            chunk_str = " ".join(words[i : i + chunk_size])
             chunks.append(chunk_str)
         return chunks
-    
-    def _check_and_build_db(self):
-        if self.client is None or self.kb_memory is None or embed_model is None or EMBEDDING_DIM is None: return
 
-        # Logic kiểm tra cache đơn giản hóa 
-        if self.client.collection_exists(self.collection_name): # type: ignore
-            # self.client.delete_collection(self.collection_name)
-            return # Đã có DB
-        
+    def _check_and_build_db(self):
+        if (
+            self.client is None
+            or self.kb_memory is None
+            or embed_model is None
+            or EMBEDDING_DIM is None
+        ):
+            return
+
+        if self.client.collection_exists(self.collection_name):
+            return
+
         print("\n--- Đang xây dựng CSDL Vector lần đầu (Áp dụng Chunking)... ---")
-        self.client.create_collection( # type: ignore
+        self.client.create_collection(
             collection_name=self.collection_name,
-            vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE), # type: ignore
-            hnsw_config=HnswConfigDiff(m=16, ef_construct=100) # type: ignore
+            vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE),
+            hnsw_config=HnswConfigDiff(m=16, ef_construct=100),
         )
-        
-        # Vector hóa và nạp dữ liệu
+
         docs = []
         ids = []
         payloads = []
         utterance_ids = self.kb_memory["utterance_order"]
-        
-        point_id = 0 # Biến đếm ID độc lập cho Qdrant vì 1 câu có thể đẻ ra nhiều chunk
-        
+        point_id = 0
+
         for uid in utterance_ids:
             utt = self.kb_memory["utterances"][uid]
-            original_text = utt['text']
-            speaker = utt['speaker']
-            
-            # 1. Băm nhỏ văn bản nếu câu quá dài (Giúp Vector không bị loãng)
+            original_text = utt["text"]
+            speaker = utt["speaker"]
+
             sub_chunks = self._chunk_text(original_text, chunk_size=40, overlap=10)
-            
+
             for chunk in sub_chunks:
-                # 2. Gắn tên người nói vào chunk để Model Embedding hiểu rõ bối cảnh nhân vật
                 chunk_for_embedding = f"{speaker}: {chunk}"
-                
-                docs.append(chunk_for_embedding) # Dùng chunk nhỏ, được làm giàu ngữ cảnh để vector hóa
+                docs.append(chunk_for_embedding)
                 ids.append(point_id)
-                payloads.append({
-                    "text_original": original_text, #  Vẫn lưu lại câu thoại gốc
-                    "doc_id": uid,                  #  Vẫn trỏ về ID gốc để lấy ngữ cảnh [idx-1, idx+1]
-                    "speaker": speaker 
-                })
-                point_id += 1 # Tăng ID cho chunk tiếp theo
-            
+                payloads.append(
+                    {
+                        "text_original": original_text,
+                        "doc_id": uid,
+                        "speaker": speaker,
+                        "start_sec": utt.get("start_sec", 0),  # Gắn metadata thời gian
+                    }
+                )
+                point_id += 1
+
         embeddings = embed_model.encode(docs, show_progress_bar=True)
-        
         points = [
-            PointStruct(id=ids[i], vector=embeddings[i].tolist(), payload=payloads[i]) 
+            PointStruct(id=ids[i], vector=embeddings[i].tolist(), payload=payloads[i])
             for i in range(len(ids))
         ]
-        
-        # Batch upsert
+
         batch_size = 100
         for i in range(0, len(points), batch_size):
-            self.client.upsert(self.collection_name, points[i:i+batch_size]) # type: ignore
-            
+            self.client.upsert(self.collection_name, points[i : i + batch_size])
+
         print(f"Xây dựng DB hoàn tất! Đã lưu {point_id} vector chunks.")
-    # ==========================================
-    # HÀM ĐÓNG KẾT NỐI
-    # ==========================================
+
     def close_connection(self):
-        """Đóng kết nối Qdrant để giải phóng thư mục DB"""
         if self.client:
             self.client.close()
             print("Đã đóng kết nối CSDL.")
-    # ==========================================
-    # TÍNH NĂNG 1: TÓM TẮT CUỘC HỌP
-    # ==========================================
+
     def summarize_meeting(self):
-        if not llm_model or not self.kb_memory: return "Lỗi: Hệ thống chưa sẵn sàng."
+        if not llm_model or not self.kb_memory:
+            return "Lỗi: Hệ thống chưa sẵn sàng."
 
         print("\n--- Đang tổng hợp và tóm tắt cuộc họp... ---")
         full_transcript = self.kb_memory["full_text"]
-        
-        
-        
+
         prompt = f"""
         Bạn là một trợ lý thư ký chuyên nghiệp. Dưới đây là biên bản ghi lại của một cuộc họp.
         Hãy viết một bản tóm tắt chi tiết bao gồm:
@@ -245,20 +247,14 @@ class RAGPipelineAdvanced:
             return response.text.strip()
         except Exception as e:
             return f"Lỗi khi tóm tắt: {e}"
-    # ==========================================
-    # TÍNH NĂNG 2: CHATBOT HỎI ĐÁP (RAG THÔNG MINH)
-    # ==========================================
+
     def rewrite_query(self, user_query):
-        """
-        Viết lại câu hỏi dựa trên lịch sử chat để đầy đủ ý nghĩa.
-        """
         if not self.chat_history or not llm_model:
-            return user_query 
-            
-        # Lấy 3 lượt hội thoại gần nhất
-        recent_history = self.chat_history[-3:] 
+            return user_query
+
+        recent_history = self.chat_history[-3:]
         history_str = "\n".join([f"User: {h[0]}\nBot: {h[1]}" for h in recent_history])
-        
+
         prompt = f"""
         You are a conversation context analyzer. 
         Read the chat history and the new user query below.
@@ -277,30 +273,21 @@ class RAGPipelineAdvanced:
         
         Rewritten Query:
         """
-        
         try:
             response = llm_model.generate_content(prompt)
-            rewritten = response.text.strip()
-            # In ra để debug (có thể comment lại nếu muốn giao diện sạch hơn)
-            # print(f"   [Debug] Query gốc: '{user_query}' -> Query sửa: '{rewritten}'")
-            return rewritten
+            return response.text.strip()
         except:
             return user_query
 
     def check_context_sufficiency(self, query, context):
-        """
-        Kiểm tra xem context hiện tại có đủ để trả lời câu hỏi không.
-        """
-        if not context or not llm_model: return False
-        
+        if not context or not llm_model:
+            return False
         prompt = f"""
         Ngữ cảnh hiện tại:
         ---
         {context}
         ---
-        
         Câu hỏi: "{query}"
-        
         Dựa VÀO CHÍNH XÁC ngữ cảnh trên, liệu có đủ thông tin để trả lời câu hỏi này không?
         Chỉ trả lời duy nhất một từ: "YES" hoặc "NO".
         """
@@ -310,112 +297,164 @@ class RAGPipelineAdvanced:
         except:
             return False
 
-    def retrieve_context(self, query):
-        if self.client is None or embed_model is None or rerank_model is None or self.kb_memory is None:
-            return []
+    def _extract_metadata_from_query(self, query):
+        metadata = {}
+        speaker_match = re.search(r"(Speaker\s*\d+)", query, re.IGNORECASE)
+        if speaker_match:
+            metadata["speaker"] = speaker_match.group(1).title()
 
-        # 1. Tìm kiếm Vector
+        time_match = re.search(r"phút\s*(?:thứ\s*)?(\d+)", query, re.IGNORECASE)
+        if time_match:
+            minute = int(time_match.group(1))
+            center_seconds = minute * 60
+            metadata["time_range"] = {
+                "gte": max(0, center_seconds - 120),
+                "lte": center_seconds + 120,
+            }
+        return metadata
+
+    # --- BỔ SUNG: Trả về thêm final_ids cho File Đánh Giá ---
+    def retrieve_context(self, query, use_metadata_filter=True, use_reranker=True):
+        if (
+            self.client is None
+            or embed_model is None
+            or rerank_model is None
+            or self.kb_memory is None
+        ):
+            return [], []
+
+        query_filter = None
+        if use_metadata_filter:
+            extracted_meta = self._extract_metadata_from_query(query)
+            must_conditions = []
+
+            if "speaker" in extracted_meta:
+                # print(f"   [Smart Filter] Khoanh vùng người nói: {extracted_meta['speaker']}")
+                must_conditions.append(
+                    FieldCondition(
+                        key="speaker", match=MatchValue(value=extracted_meta["speaker"])
+                    )
+                )
+
+            if "time_range" in extracted_meta:
+                time_window = extracted_meta["time_range"]
+                # print(f"   [Smart Filter] Khoanh vùng thời gian: Từ {time_window['gte']}s đến {time_window['lte']}s")
+                must_conditions.append(
+                    FieldCondition(
+                        key="start_sec",
+                        range=Range(gte=time_window["gte"], lte=time_window["lte"]),
+                    )
+                )
+
+            if must_conditions:
+                query_filter = Filter(must=must_conditions)
+
         query_vec = embed_model.encode([query], normalize_embeddings=True)[0].tolist()
         resp = self.client.query_points(
-                collection_name=self.collection_name,
-                query=query_vec,                 
-                # query_filter=query_filter,       # áp dụng filter nếu có
-                limit=30,
-                with_payload=True
-            )
+            collection_name=self.collection_name,
+            query=query_vec,
+            query_filter=query_filter,
+            limit=30 if use_reranker else 5,
+            with_payload=True,
+        )
 
         hits = resp.points or []
-        
-        
-        if not hits: return []
-        
-        # 2. Lọc trùng lặp & Rerank
+        if not hits:
+            return [], []
+
         unique_hits = []
-        seen_doc_ids = set() # Cuốn sổ ghi nhớ ID đã gặp
-        
+        seen_doc_ids = set()
+
         for hit in hits:
-            if not hit.payload: continue
-            doc_id = hit.payload.get('doc_id')
-            
-            # KIỂM TRA: Nếu doc_id chưa từng xuất hiện thì mới lấy
+            if not hit.payload:
+                continue
+            doc_id = hit.payload.get("doc_id")
             if doc_id and doc_id not in seen_doc_ids:
                 seen_doc_ids.add(doc_id)
                 unique_hits.append(hit)
-        
-        if not unique_hits: return []
 
-        # Tạo pairs CHỈ TỪ những hit không trùng lặp
-        pairs = [[query, hit.payload.get('text_original', '')] for hit in unique_hits]
-        scores = rerank_model.predict(pairs) # type: ignore
-        
-        # Lấy Top 5 (Lưu ý: Dùng unique_hits thay vì hits)
-        ranked_hits = sorted(zip(scores, unique_hits), key=lambda x: x[0], reverse=True)[:5]
-        
-        # 3. Context Augmentation (Lấy 1 trước, 1 sau)
+        if not unique_hits:
+            return [], []
+
+        ranked_hits = []
+        if use_reranker:
+            pairs = [
+                [query, hit.payload.get("text_original", "")] for hit in unique_hits
+            ]
+            scores = rerank_model.predict(pairs)  # type: ignore
+            ranked_hits = sorted(
+                zip(scores, unique_hits), key=lambda x: x[0], reverse=True
+            )[:5]
+        else:
+            ranked_hits = [(hit.score, hit) for hit in unique_hits[:5]]
+
         final_chunks = []
+        final_ids = []  # Thêm mảng này để trả về cho file đánh giá
         processed_ids = set()
-        
-        # Map ID sang index trong list tuần tự
-        id_to_index = {uid: i for i, uid in enumerate(self.kb_memory["utterance_order"])}
-        
+        id_to_index = {
+            uid: i for i, uid in enumerate(self.kb_memory["utterance_order"])
+        }
+
         for score, hit in ranked_hits:
-            if not hit.payload: continue
-            doc_id = hit.payload.get('doc_id')
-            if not doc_id or doc_id in processed_ids: continue
-            
+            if not hit.payload:
+                continue
+            doc_id = hit.payload.get("doc_id")
+
+            if not doc_id or doc_id in processed_ids:
+                continue
             idx = id_to_index.get(doc_id)
-            if idx is None: continue
-            
-            # Cửa sổ [idx-1, idx+1]
+            if idx is None:
+                continue
+
             start = max(0, idx - 1)
             end = min(len(self.kb_memory["utterance_order"]), idx + 2)
-            
+
             chunk_text = []
             for i in range(start, end):
                 uid = self.kb_memory["utterance_order"][i]
                 processed_ids.add(uid)
                 u = self.kb_memory["utterances"][uid]
                 chunk_text.append(f"[{u['start']}] {u['speaker']}: {u['text']}")
-            
+
             final_chunks.append("\n".join(chunk_text))
-            
-        return final_chunks
+            final_ids.append(doc_id)
 
+        return final_chunks, final_ids
 
-
-    def chat(self, user_query, return_context: bool = False):
-        """
-        Trả về câu trả lời. Nếu `return_context=True` thì trả về tuple (answer, final_context_str).
-        """
+    # --- BỔ SUNG: Nhận tham số cấu hình và trả về 3 biến ---
+    def chat(
+        self,
+        user_query,
+        return_context: bool = False,
+        use_metadata_filter=True,
+        use_reranker=True,
+    ):
         if not llm_model:
             if return_context:
-                return "Lỗi: Model chưa sẵn sàng.", ""
+                return "Lỗi: Model chưa sẵn sàng.", "", []
             return "Lỗi: Model chưa sẵn sàng."
 
-        # --- TỐI ƯU 1: CHỈ REWRITE NẾU CÓ LỊCH SỬ ---
-        # Nếu chưa chat câu nào (list rỗng), thì câu hỏi của user là ngữ cảnh đầy đủ rồi.
         if not self.chat_history:
             rewritten_query = user_query
-            print(f"   [Smart RAG] Câu hỏi đầu tiên, bỏ qua bước Rewrite.")
         else:
-            # Chỉ tốn request này khi đã chat > 1 câu
             rewritten_query = self.rewrite_query(user_query)
-            print(f"   [Smart RAG] Đã viết lại câu hỏi: {rewritten_query}")
-        
-        # --- TỐI ƯU 2: LUÔN LUÔN TÌM KIẾM (BỎ CHECK SUFFICIENCY) ---
-        
-        print(f"   [Smart RAG] Đang tìm kiếm thông tin...")
-        context_chunks = self.retrieve_context(rewritten_query)
-        
+
+        # Lấy context và ID
+        context_chunks, context_ids = self.retrieve_context(
+            rewritten_query,
+            use_metadata_filter=use_metadata_filter,
+            use_reranker=use_reranker,
+        )
+
         if not context_chunks:
             final_context_str = "Không tìm thấy thông tin cụ thể trong tài liệu."
         else:
             final_context_str = "\n---\n".join(context_chunks)
-            # Cập nhật context hiện tại (nếu sau này cần dùng lại)
-            self.current_context = final_context_str 
-        
-        # Tạo prompt lịch sử
-        history_str = "\n".join([f"User: {h[0]}\nBot: {h[1]}" for h in self.chat_history[-3:]])
+            self.current_context = final_context_str
+
+        history_str = "\n".join(
+            [f"User: {h[0]}\nBot: {h[1]}" for h in self.chat_history[-3:]]
+        )
 
         prompt = f"""
         Bạn là trợ lý ảo chuyên nghiệp.
@@ -438,20 +477,20 @@ class RAGPipelineAdvanced:
         
         Câu trả lời:
         """
-        
+
         try:
-            # --- TỐI ƯU 3: CẤU HÌNH GENERATION ---
-            # Giảm max_output_tokens để trả lời nhanh hơn nếu cần
             response = llm_model.generate_content(prompt)
             answer = response.text.strip()
-            
-            # Lưu lịch sử
             self.chat_history.append((user_query, answer))
+
             if return_context:
-                return answer, final_context_str
+                return answer, final_context_str, context_ids
             return answer
         except Exception as e:
+            if return_context:
+                return f"Lỗi khi tạo câu trả lời: {e}", "", []
             return f"Lỗi khi tạo câu trả lời: {e}"
+
 
 # ==========================================
 # CHƯƠNG TRÌNH CHÍNH (MAIN MENU)
@@ -542,9 +581,10 @@ def main():
                         if not q: continue
                     print("Bot đang suy nghĩ...", end="\r")
                     if show_ctx:
-                        ans, ctx = app.chat(q, return_context=True)
+                        ans, ctx, _ = app.chat(q, return_context=True)
                         print(" "*20, end="\r")
                         print(f"Bot: {ans}\n\n--- Ngữ cảnh tìm được ---\n{ctx}")
+                        print("ID các đoạn được dùng:", _)
                     else:
                         ans = app.chat(q)
                         print(" "*20, end="\r") 
