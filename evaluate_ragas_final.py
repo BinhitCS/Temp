@@ -164,7 +164,6 @@ def main():
    
     gemini_llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash", 
-        temperature=0
     )
     
     gemini_embeddings = GoogleGenerativeAIEmbeddings(
@@ -180,7 +179,7 @@ def main():
             metrics=[context_recall, context_precision, faithfulness],
             llm=gemini_llm, 
             embeddings=gemini_embeddings,
-            run_config=my_run_config  # <-- THÊM DÒNG NÀY VÀO ĐÂY
+            
         )
         
         df_result = result.to_pandas()

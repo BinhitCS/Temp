@@ -33,7 +33,7 @@ try:
         )
 
     genai.configure(api_key=GOOGLE_API_KEY)  # type: ignore
-    llm_model = genai.GenerativeModel("gemini-2.5-flash")  # type: ignore
+    llm_model = genai.GenerativeModel("gemini-3.1-flash-lite") # type: ignore
     print("Đã kết nối thành công với Google Gemini.")
 
 except Exception as e:
