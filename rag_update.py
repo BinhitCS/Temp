@@ -1,5 +1,6 @@
 import json
 import os
+os.environ["HF_HUB_OFFLINE"] = "1"  # <--- THÊM DÒNG NÀY ĐỂ ÉP CHẠY OFFLINE
 import re
 import time
 import google.generativeai as genai
@@ -48,13 +49,13 @@ try:
     print("Đang tải model AI (có thể mất chút thời gian lần đầu)...")
     embed_model = SentenceTransformer(
         "BAAI/bge-m3",
-        device="cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu",
+        device= "cpu",
     )
     EMBEDDING_DIM = embed_model.get_sentence_embedding_dimension()
 
     rerank_model = CrossEncoder(
         "BAAI/bge-reranker-large",
-        device="cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu",
+        device= "cpu",
     )
     print("Tải model hoàn tất.")
 except Exception as e:
@@ -299,18 +300,70 @@ class RAGPipelineAdvanced:
 
     def _extract_metadata_from_query(self, query):
         metadata = {}
-        speaker_match = re.search(r"(Speaker\s*\d+)", query, re.IGNORECASE)
+        
+        # 1. Trích xuất Speaker (Hỗ trợ "Speaker 1", "speaker 2", "Speaker1"...)
+        speaker_match = re.search(r"speaker\s*(\d+)", query, re.IGNORECASE)
         if speaker_match:
-            metadata["speaker"] = speaker_match.group(1).title()
+            metadata["speaker"] = f"Speaker {speaker_match.group(1)}"
 
-        time_match = re.search(r"phút\s*(?:thứ\s*)?(\d+)", query, re.IGNORECASE)
-        if time_match:
-            minute = int(time_match.group(1))
-            center_seconds = minute * 60
-            metadata["time_range"] = {
-                "gte": max(0, center_seconds - 120),
-                "lte": center_seconds + 120,
-            }
+        # 2. Trích xuất thời gian tuyệt đối (Hỗ trợ tiếng Anh & tiếng Việt)
+        found_seconds = []
+        
+        # a) Mẫu HH:MM:SS hoặc MM:SS (VD: 00:20:09, 24:10)
+        clock_matches = re.findall(r"\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b", query)
+        for match in clock_matches:
+            if match[2]: # Nếu có giờ (HH:MM:SS)
+                sec = int(match[0])*3600 + int(match[1])*60 + int(match[2])
+            else: # Nếu chỉ có phút và giây (MM:SS)
+                sec = int(match[0])*60 + int(match[1])
+            found_seconds.append(sec)
+            
+        # b) Mẫu "minute X", "min X", "phút X"
+        min_matches = re.findall(r"(?:minute|min|phút)\s*(?:thứ\s*)?(\d+)", query, re.IGNORECASE)
+        for m in min_matches:
+            found_seconds.append(int(m) * 60)
+            
+        # Tính toán Time Range nếu tìm thấy mốc thời gian tuyệt đối
+        if found_seconds:
+            found_seconds.sort() # Sắp xếp từ nhỏ đến lớn
+            if len(found_seconds) >= 2:
+                # Tìm thấy 2 mốc (VD: from 00:05 to 00:08)
+                metadata["time_range"] = {
+                    "gte": max(0, found_seconds[0] - 30), # Đệm 30s trước
+                    "lte": found_seconds[-1] + 30       # Đệm 30s sau
+                }
+            else:
+                # Tìm thấy 1 mốc (VD: around 00:20:09)
+                center = found_seconds[0]
+                metadata["time_range"] = {
+                    "gte": max(0, center - 60), # Lấy khoảng +- 1 phút
+                    "lte": center + 60
+                }
+                
+        # 3. Trích xuất thời gian tương đối (last, end, beginning...)
+        # Chỉ kích hoạt nếu KHÔNG có mốc thời gian cụ thể nào được nhắc đến ở trên
+        elif self.kb_memory and "utterance_order" in self.kb_memory:
+            lower_query = query.lower()
+            try:
+                # Lấy số giây của câu nói cuối cùng trong database
+                last_uid = self.kb_memory["utterance_order"][-1]
+                last_sec = self.kb_memory["utterances"][last_uid].get("start_sec", 0)
+                
+                # Câu hỏi về Cuối cuộc họp (last sentence, end of meeting)
+                if any(word in lower_query for word in ["last", "end", "cuối", "kết thúc"]):
+                    metadata["time_range"] = {
+                        "gte": max(0, last_sec - 180), # Khoanh vùng 3 phút cuối cùng
+                        "lte": last_sec + 60
+                    }
+                # Câu hỏi về Đầu cuộc họp (beginning, start)
+                elif any(word in lower_query for word in ["beginning", "start", "đầu tiên", "bắt đầu"]):
+                    metadata["time_range"] = {
+                        "gte": 0,
+                        "lte": 180 # Khoanh vùng 3 phút đầu tiên
+                    }
+            except Exception:
+                pass # Bỏ qua an toàn nếu cấu trúc db bị lỗi
+
         return metadata
 
     # --- BỔ SUNG: Trả về thêm final_ids cho File Đánh Giá ---

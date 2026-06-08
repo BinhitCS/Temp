@@ -1,26 +1,25 @@
 import pandas as pd
-from datasets import Dataset
-from ragas import evaluate
-from ragas.metrics import context_recall, context_precision, faithfulness
-from ragas.run_config import RunConfig
+import csv
 import os
 import warnings
 import time
 from dotenv import load_dotenv
-
-# Tắt các cảnh báo nhỏ
-warnings.filterwarnings("ignore")
-
-# CẤU HÌNH LLM CHO RAGAS SỬ DỤNG GEMINI
+from datasets import Dataset
+from ragas import evaluate
+from ragas.metrics import context_recall, context_precision, faithfulness
+from ragas.run_config import RunConfig
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-
-# KẾT NỐI VỚI HỆ THỐNG RAG CỦA BẠN
 from rag_update import RAGPipelineAdvanced
+
+# Tắt cảnh báo
+warnings.filterwarnings("ignore")
 
 def calculate_ir_metrics(results, k=5):
     hits = 0
     mrr_sum = 0
     total = len(results)
+    if total == 0:
+        return 0, 0
 
     for res in results:
         ground_truth_id = str(res["reference_context_id"]).strip()
@@ -37,153 +36,133 @@ def calculate_ir_metrics(results, k=5):
             hits += 1
             mrr_sum += 1.0 / rank
 
-    hit_rate = hits / total if total > 0 else 0
-    mrr = mrr_sum / total if total > 0 else 0
+    hit_rate = hits / total
+    mrr = mrr_sum / total
     return hit_rate, mrr
 
 def main():
     print("="*60)
-    print(" BẮT ĐẦU ĐÁNH GIÁ TOÀN BỘ DATASET (91 CÂU HỎI) ")
+    print(" ĐANG CHẠY ĐÁNH GIÁ (AUTO-RETRY 429 & LOG CHI TIẾT ID) ")
     print("="*60)
 
-    # 1. Load API Key
-    load_dotenv()
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    if not GOOGLE_API_KEY:
-        print("LỖI: Chưa có GOOGLE_API_KEY trong file .env")
-        return
+    # 1. Khởi tạo file log real-time
+    log_filename = "evaluation_realtime_log.csv"
+    with open(log_filename, "w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["question", "ground_truth", "retrieved_doc_ids", "answer", "status"])
 
-    # 2. Đọc Dataset
-    data_folder = "tailieu"
-    try:
-        df_dataset = pd.read_csv("test_dataset.csv")
-        print(f"✅ Đã tải thành công file Dataset với {len(df_dataset)} câu hỏi.")
-    except FileNotFoundError:
-        print("LỖI: Không tìm thấy file 'test_dataset.csv'.")
-        return
-        
-    all_ragas_data = {
-        "question": [],
-        "answer": [],
-        "contexts": [],
-        "ground_truth": []
-    }
+    load_dotenv()
+    df_dataset = pd.read_csv("test_dataset.csv")
+    
+    all_ragas_data = {"question": [], "answer": [], "contexts": [], "ground_truth": []}
     all_ir_results = []
     
-    # 3. Lấy danh sách các file duy nhất từ cột 'file_source' trong file CSV
     json_files = df_dataset['file_source'].unique()
     
-    # 4. Vòng lặp duyệt qua từng file cuộc họp
     for file_name in json_files:
-        # Ép kiểu tên file về str cho chắc ăn
-        file_name = str(file_name).strip()
-        full_path = os.path.join(data_folder, file_name)
-        
-        if not os.path.exists(full_path):
-            print(f"\n[!] Bỏ qua: Không tìm thấy file gốc {full_path}")
+        full_path = os.path.join("tailieu", str(file_name).strip())
+        if not os.path.exists(full_path): 
+            print(f"[!] Không tìm thấy file {full_path}")
             continue
             
-        print(f"\n" + "="*50)
-        print(f" ĐANG ĐÁNH GIÁ FILE: {file_name} ")
-        print("="*50)
-        
-        # Lọc câu hỏi của file này
-        df_file = df_dataset[df_dataset['file_source'] == file_name]
-        
-        # KHỞI TẠO RAG CHO FILE NÀY
-        print(f"[*] Khởi tạo Vector Database cho {file_name}...")
+        print(f"\n[*] Đang đánh giá file: {file_name}")
         app = RAGPipelineAdvanced(input_file=full_path)
             
-        # Vòng lặp chạy từng câu hỏi
+        df_file = df_dataset[df_dataset['file_source'] == file_name]
+        
         for index, row in df_file.iterrows():
-            # [QUAN TRỌNG] Ép kiểu toàn bộ về chuỗi chuẩn
             question = str(row['question']).strip()
             ground_truth = str(row['ground_truth']).strip()
-            ref_id = str(row['reference_context_id']).strip()
+            ref_id = str(row['reference_context_id']).strip() # KHÔI PHỤC DÒNG NÀY ĐỂ CHẤM IR
             
             print(f"  -> Q: {question}")
             
-            try:
-                ans, retrieved_context_str, ctx_ids = app.chat(
-                    user_query=question, 
-                    return_context=True,
-                    use_metadata_filter=True, 
-                    use_reranker=True         
-                )
-                
-                # Tách text context thành mảng
-                ctx_texts = retrieved_context_str.split("\n---\n")
-                
-                # Lưu trữ kết quả
-                all_ragas_data["question"].append(question)
-                all_ragas_data["answer"].append(str(ans))
-                all_ragas_data["contexts"].append(ctx_texts)
-                all_ragas_data["ground_truth"].append(ground_truth)
-                
-                all_ir_results.append({
-                    "reference_context_id": ref_id, 
-                    "retrieved_doc_ids": ctx_ids
-                })
-                
-            except Exception as e:
-                print(f"    [!] Lỗi khi truy vấn câu này: {e}")
+            # CƠ CHẾ AUTO-RETRY ĐỂ CHỐNG LỖI 429 QUÁ TẢI API
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    ans, retrieved_context_str, ctx_ids = app.chat(
+                        user_query=question, 
+                        return_context=True,
+                        use_metadata_filter=False
+                    )
+                    
+                    # Nếu câu trả lời bị dính lỗi từ Gemini, ép nó văng lỗi để Retry
+                    if "Lỗi khi tạo câu trả lời" in str(ans):
+                        raise Exception(ans)
+                        
+                    # GHI LOG THÀNH CÔNG
+                    with open(log_filename, "a", encoding="utf-8-sig", newline="") as f:
+                        writer = csv.writer(f)
+                        writer.writerow([question, ground_truth, str(ctx_ids), str(ans), "OK"])
+                    
+                    print(f"     ✅ Done! IDs: {ctx_ids}")
+                    
+                    # NẠP DỮ LIỆU ĐỂ CHẤM RAGAS & IR
+                    ctx_texts = retrieved_context_str.split("\n---\n")
+                    all_ragas_data["question"].append(question)
+                    all_ragas_data["answer"].append(str(ans))
+                    all_ragas_data["contexts"].append(ctx_texts)
+                    all_ragas_data["ground_truth"].append(ground_truth)
+                    all_ir_results.append({"reference_context_id": ref_id, "retrieved_doc_ids": ctx_ids})
+                    
+                    break # Thành công thì thoát khỏi vòng lặp Retry
+                    
+                except Exception as e:
+                    print(f"    [!] Lỗi API (Thử lại {attempt+1}/{max_retries}): {e}")
+                    if attempt < max_retries - 1:
+                        print("    ⏳ Đang chờ 30 giây để Google nhả Rate Limit...")
+                        time.sleep(30)
+                    else:
+                        print("    ❌ Bỏ qua do API lỗi liên tục.")
+                        with open(log_filename, "a", encoding="utf-8-sig", newline="") as f:
+                            writer = csv.writer(f)
+                            writer.writerow([question, ground_truth, "[]", "ERROR", str(e)])
             
-            # NGỦ 4 GIÂY ĐỂ TRÁNH LỖI QUÁ TẢI (RATE LIMIT) CỦA GEMINI
-            time.sleep(12)
+            # Ngủ 15 giây giữa các câu để né Limit 15 RPM
+            time.sleep(15)
             
         app.close_connection()
     
-    if not all_ir_results:
-        print("Không có kết quả nào được ghi nhận. Dừng chương trình.")
-        return
-
-    # ==========================================
-    # 5. CHẤM ĐIỂM TRUY XUẤT (Hit Rate & MRR)
-    # ==========================================
+    # -----------------------------------------------------
+    # CHẤM ĐIỂM IR METRICS (ĐÃ ĐƯỢC KHÔI PHỤC)
+    # -----------------------------------------------------
     print("\n" + "="*50)
-    print(" KẾT QUẢ ĐÁNH GIÁ MÔ-ĐUN TRUY XUẤT (RETRIEVAL) ")
+    print(" TỔNG KẾT ĐIỂM TRUY XUẤT (IR METRICS) ")
     print("="*50)
     hit_rate, mrr = calculate_ir_metrics(all_ir_results, k=5)
-    print(f" => Hit Rate@5 : {hit_rate:.4f} (Trên 0.8 là xuất sắc)")
-    print(f" => MRR@5      : {mrr:.4f} (Trên 0.7 là xuất sắc)")
-    
-    # LƯU CHECKPOINT (Tránh mất sạch công sức nếu Ragas lỗi)
-    print("\n--- Đang lưu Checkpoint dữ liệu câu trả lời ---")
-    df_checkpoint = pd.DataFrame(all_ragas_data)
-    df_checkpoint.to_csv("checkpoint_rag_answers.csv", index=False, encoding='utf-8-sig')
-    print("✅ Đã lưu file 'checkpoint_rag_answers.csv'")
-    
-    # ==========================================
-    # 6. CHẤM ĐIỂM TẠO SINH BẰNG RAGAS (GEMINI)
-    # ==========================================
+    print(f" - Hit Rate@5 : {hit_rate:.4f}")
+    print(f" - MRR@5      : {mrr:.4f}")
+
+    # -----------------------------------------------------
+    # CHẤM ĐIỂM RAGAS
+    # -----------------------------------------------------
     print("\n" + "="*50)
-    print(" ĐANG CHẠY LLM-AS-A-JUDGE (RAGAS BẰNG GEMINI) ")
+    print(" BẮT ĐẦU CHẤM ĐIỂM RAGAS (SẼ MẤT 5-10 PHÚT...) ")
     print("="*50)
-    print("Lưu ý: Quá trình này sẽ mất thêm khoảng 5-10 phút để AI tự chấm điểm...")
     
-   
+    # Bật tính năng Retry ngầm của Langchain
     gemini_llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash", 
+        model="gemini-1.5-flash",
+        max_retries=5
     )
-    
-    gemini_embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001"
-    )
+    gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     dataset = Dataset.from_dict(all_ragas_data)
     
-    my_run_config = RunConfig(max_workers=1, max_wait=60, max_retries=10)
-
     try:
+        # Ép Ragas chạy từng luồng một (max_workers=1) để tránh bị chặn IP
+        my_run_config = RunConfig(max_workers=1, max_wait=60, max_retries=10)
+        
         result = evaluate(
-            dataset = dataset,
+            dataset=dataset,
             metrics=[context_recall, context_precision, faithfulness],
-            llm=gemini_llm, 
+            llm=gemini_llm,
             embeddings=gemini_embeddings,
-            
+            run_config=my_run_config # Truyền cấu hình chặn lỗi vào đây
         )
         
         df_result = result.to_pandas()
-        df_result.to_csv("ragas_evaluation_results.csv", index=False, encoding='utf-8-sig')
+        df_result.to_csv("ragas_evaluation_results.csv", index=False, encoding="utf-8-sig")
         
         print("\n" + "="*50)
         print(" TỔNG KẾT ĐIỂM RAGAS (GENERATION METRICS) ")
@@ -193,11 +172,8 @@ def main():
         print(f" - Faithfulness      : {result['faithfulness']:.4f}")
         
         print("\n✅ Đã xuất điểm chi tiết từng câu ra file: 'ragas_evaluation_results.csv'")
-        print("🎉 XIN CHÚC MỪNG! HỆ THỐNG ĐÃ HOÀN THÀNH QUÁ TRÌNH ĐÁNH GIÁ!")
-        
     except Exception as e:
-        print(f"\n[!] LỖI RAGAS: {e}")
-        print("Tuy nhiên dữ liệu vẫn an toàn trong file 'checkpoint_rag_answers.csv'.")
+        print(f"\n❌ Lỗi khi chạy thư viện RAGAS: {e}")
 
 if __name__ == "__main__":
     main()
